@@ -137,7 +137,7 @@ fisherman.normPosition = new THREE.Vector3(-2, 0, 7);
 
 const tagDiv = document.querySelector('div.ui');
 const tagLabel = new CSS2DObject(tagDiv);
-tagLabel.center.set(0.5, 1.75);
+tagLabel.center.set(0.5, 2);
 tagLabel.visible = false;
 
 meshes.push(house1, house2,fisherman);
@@ -179,7 +179,7 @@ window.addEventListener('keydown', (e) => {
         if(e.code === 'Escape' && showDialogue) {
             resetDialogueStep();
             starter.style.display = 'none';
-            otherActor.style.display = 'none';
+            if(otherActor) otherActor.style.display = 'none';
             showDialogue = false;
             pressTip.style.display = 'block';
             tagLabel.visible = true;

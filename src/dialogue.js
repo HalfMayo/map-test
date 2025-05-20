@@ -51,7 +51,7 @@ function goNextDialogue(e) {
             break;
     }
 
-    if(!dialogue.lines) {
+    if(!dialogue[0].line) {
         textPlace.scrollTop = 0;
         linePlace.textContent = dialogue[dialogueStep];
     } else {
@@ -81,14 +81,24 @@ function goNextDialogue(e) {
 
 function resetDialogueStep() {
     dialogueStep = 0;
-    if(dialogue[0].actor === 'mc') {
-        lineMc.textContent = dialogue[0].line + ' [' + String.fromCharCode(8594) + ']';
-        starter = dialogueBoxMc;
-        otherActor = dialogueBoxNpc;
+    console.log(dialogue)
+    if(!dialogue[0].line) {
+        if(dialogue.length > 1) {
+            linePlace.textContent = dialogue[0] + ' [' + String.fromCharCode(8594) + ']';
+        } else {
+            linePlace.textContent = dialogue[0] + ' [Esc to close]';
+        }
+        starter = descriptionBoxPlace;
     } else {
-        lineNpc.textContent = dialogue[0].line + ' [' + String.fromCharCode(8594) + ']';
-        otherActor = dialogueBoxMc;
-        starter = dialogueBoxNpc;
+        if(dialogue[0].actor === 'mc') {
+            lineMc.textContent = dialogue[0].line + ' [' + String.fromCharCode(8594) + ']';
+            starter = dialogueBoxMc;
+            otherActor = dialogueBoxNpc;
+        } else {
+            lineNpc.textContent = dialogue[0].line + ' [' + String.fromCharCode(8594) + ']';
+            otherActor = dialogueBoxMc;
+            starter = dialogueBoxNpc;
+        }
     }
 }
 
