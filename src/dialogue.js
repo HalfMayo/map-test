@@ -81,7 +81,7 @@ function goNextDialogue(e) {
 
 function resetDialogueStep() {
     dialogueStep = 0;
-    console.log(dialogue)
+
     if(!dialogue[0].line) {
         if(dialogue.length > 1) {
             linePlace.textContent = dialogue[0] + ' [' + String.fromCharCode(8594) + ']';
