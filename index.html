@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Map Test</title>
+    <link rel="stylesheet" href="/src/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="ui" id="interact">
+      <p>
+        <span id="tag-name"></span><br/>
+        <span id="tag-description"></span>
+      </p>
+    </div>
+
+    <div id="press-tip">
+      <p>Press <strong>E</strong> to interact</p>
+    </div>
+
+    <div id="dialogue-box-npc">
+      <img class="portrait" src="/portraits/NPC.png" alt="NPC"/>
+      <div class="infos">
+        <div class="speaker-name sn-l" id="npc-name"></div>
+        <div class="dialogue left" id="text-npc">
+          <p id="line-npc"></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="dialogue-box-mc">
+      <div class="infos i-r">
+        <div class="speaker-name sn-r">The Explorer</div>
+        <div class="dialogue right" id="text-mc">
+          <p id="line-mc"></p>
+        </div>
+      </div>
+      <img class="portrait" src="/portraits/MC.png" alt="MC"/>
+    </div>
+
+    <div id="description-box-place">
+      <div class="infos i-r">
+        <div class="speaker-name sn-r" id="place-name"></div>
+        <div class="dialogue right" id="text-place">
+          <p id="line-place"></p>
+        </div>
+      </div>
+      <img class="portrait" src="/portraits/PLACE.png" alt="Place"/>
+    </div>
+
+    <canvas class="webgl"></canvas>
+
+    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="/src/dialogue.js"></script>
+
+  </body>
+</html>
