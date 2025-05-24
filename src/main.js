@@ -365,6 +365,8 @@ function tick() {
 
         if(keyMap.length === 0) {
             distance = 0;
+        } else if (rotationFraction !== 15) {
+            distance = 0.015;
         } else {
             distance = 0.025;
         }
@@ -512,7 +514,7 @@ function tick() {
     if(person && turn) {
         const actualRotation = person.rotation.z;
         const endRotation = startingRotation + rotationFactor;
-        console.log('keyMap: ', keyMap);
+        // console.log('keyMap: ', keyMap);
         // console.log(actualRotation, endRotation);
         console.log('factor: ', rotationFactor, 'fraction: ', rotationFraction);
         if ((rotationFactor < 0) && (actualRotation > endRotation)) {
