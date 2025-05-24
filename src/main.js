@@ -54,6 +54,7 @@ const actions = {
     walk: {weight: 0},
 };
 const keyMap = [];
+const pressCheck = {repeat: false, lastRepeat: 0};
 let positionStart = 1;
 const clock = new THREE.Clock();
 let previousTime = 0;
@@ -168,7 +169,11 @@ window.addEventListener('resize', () => {
 
 window.addEventListener('keydown', (e) => {
     if((e.code === 'KeyW' || e.code === 'KeyS' || e.code === 'KeyA' || e.code === 'KeyD') && !showDialogue) {
-        keyDownMovement = e.code;
+        if(keyDownMovement !== e.code){
+            keyDownMovement = e.code;
+        }
+        pressCheck.repeat = e.repeat;
+        pressCheck.lastRepeat = clock.getElapsedTime();
     } else {
         if(e.code === 'KeyE' && tagLabel.visible) {
             starter.style.display = 'flex';
@@ -327,7 +332,7 @@ function tick() {
                     nearestMesh.distance = mesh.distance;
                 }
             }
-            console.log('Nearest Mesh: ', nearestMesh);
+            //console.log('Nearest Mesh: ', nearestMesh);
             if(nearestMesh.mesh && !showDialogue) {
                 setTag(nearestMesh.mesh);
                 nearestMesh.mesh.add(tagLabel);
@@ -344,9 +349,13 @@ function tick() {
         // KeyUp
         if((keyUpMovement === 'KeyW' || keyUpMovement === 'KeyS' || keyUpMovement === 'KeyA' || keyUpMovement === 'KeyD')) {
             keyMap.splice(keyMap.indexOf(keyUpMovement), 1);
-            keyUpMovement = null;
-            if(keyMap.length === 0) {
+            if(keyUpMovement === keyDownMovement) {
                 keyDownMovement = null;
+            }
+            keyUpMovement = null;
+            if(keyMap.length === 0 || (keyMap.length > 0 && !keyDownMovement)) {
+                keyDownMovement = null;
+                keyMap.length = 0;
                 setWeight(actions.idle.action, 1);
                 actions.idle.action.time = 1;
                 actions.walk.action.crossFadeTo(actions.idle.action, 0.35, true);
@@ -360,7 +369,17 @@ function tick() {
             distance = 0.025;
         }
 
-        // KeyDown and movement
+        // Avoid continuous movement when no key is pressed
+        if((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD')  && (pressCheck.repeat && elapsedTime - pressCheck.lastRepeat > 0.4)) {
+            keyDownMovement = null;
+            keyMap.length = 0;
+            setWeight(actions.idle.action, 1);
+            actions.idle.action.time = 1;
+            actions.walk.action.crossFadeTo(actions.idle.action, 0.35, true);
+            startAction = 'idle';
+        }
+
+            // KeyDown and movement
         if((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD') && startAction === 'idle') {
             setWeight(actions.walk.action, 1);
             actions.walk.action.time = 1;
@@ -370,6 +389,7 @@ function tick() {
             startDelay = elapsedTime;
         }
 
+        // Avoid opposite keystrokes to be pressed at the same time
         if((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD') && !keyMap.includes(keyDownMovement)) {
             if(keyMap.length < 2) {
                 keyMap.push(keyDownMovement);
@@ -492,9 +512,9 @@ function tick() {
     if(person && turn) {
         const actualRotation = person.rotation.z;
         const endRotation = startingRotation + rotationFactor;
-        // console.log('turn', turn, keyMap);
+        console.log('keyMap: ', keyMap);
         // console.log(actualRotation, endRotation);
-        // console.log(rotationFactor, rotationFraction);
+        console.log('factor: ', rotationFactor, 'fraction: ', rotationFraction);
         if ((rotationFactor < 0) && (actualRotation > endRotation)) {
             person.rotation.z += rotationFactor / 15;
             rotationFraction --;
@@ -565,7 +585,7 @@ function positionDirection(pS, pE) {
 }
 
 function calcRotationFactor(positionStart, positionEnd) {
-    // console.log(positionStart, positionEnd)
+    console.log('turn factor: ', positionDirection(positionStart, positionEnd))
     return (-Math.PI / 4) * positionDirection(positionStart, positionEnd);
 }
 
@@ -596,7 +616,7 @@ function calcDistances(mesh) {
     } else {
         mesh.distance = mesh.normPosition.distanceTo(person.position);
     }
-    console.log(mesh.name, mesh.distance);
+    // console.log(mesh.name, mesh.distance);
 }
 
 // Animate
