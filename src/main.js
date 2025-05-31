@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import * as CANNON from 'cannon-es';
 import GUI from 'lil-gui';
 import {CSS2DObject, CSS2DRenderer, GLTFLoader, OrbitControls} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
