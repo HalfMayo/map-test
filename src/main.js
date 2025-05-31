@@ -64,10 +64,6 @@ let startDelay = 0;
 const delay = 0.2;
 let showDialogue = false;
 
-// Physics
-const world = new CANNON.World();
-world.gravity.set(0, -9.81, 0);
-
 // Objects and Lights
 // Geometries and Materials
 const houseGeometry = new THREE.BoxGeometry(10, 4, 3);
@@ -150,27 +146,6 @@ tagLabel.visible = false;
 
 meshes.push(house1, house2,fisherman);
 scene.add(house1, house2, fisherman, floor);
-
-const boxShape = new CANNON.Box(new CANNON.Vec3(5, 2, 1.5));
-const house1Body = new CANNON.Body({
-    mass: 0,
-    position: new CANNON.Vec3(house1.position.x, house1.position.y, house1.position.z),
-    quaternion: new CANNON.Quaternion(house1.quaternion.x, house1.quaternion.y, house1.quaternion.z, house1.quaternion.w),
-    shape: boxShape
-});
-house1Body.addEventListener('collide', () => console.log('QUASO'))
-const house2Body = new CANNON.Body({
-    mass: 0,
-    position: new CANNON.Vec3(house2.position.x, house2.position.y, house2.position.z),
-    quaternion: new CANNON.Quaternion(house2.quaternion.x, house2.quaternion.y, house2.quaternion.z, house2.quaternion.w),
-    shape: boxShape
-});
-const cylinderShape = new CANNON.Cylinder(0.5, 0.5, 2, 6);
-const cylinderBody = new CANNON.Body({ mass: 1, shape: cylinderShape })
-world.addBody(cylinderBody)
-world.addBody(house1Body);
-world.addBody(house2Body);
-console.log(world)
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -346,8 +321,6 @@ function tick() {
     const elapsedTime = clock.getElapsedTime();
     const deltaTime = elapsedTime - previousTime;
     previousTime = elapsedTime;
-
-    world.step(1 / 60, deltaTime, 3)
 
     // Direction management (keypress based direction, including direction change)
     if(person) {
