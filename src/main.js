@@ -46,7 +46,7 @@ const gltfLoader = new GLTFLoader();
 // Variables
 let person, lastKnowPosition;
 const meshes = [];
-let startingRotation, rotationFactor, turn, distance;
+let startingRotation, rotationFactor, turn, force;
 let animationMixer, animations, startAction;
 let keyDownMovement, keyUpMovement;
 let rotationFraction = 15;
@@ -151,6 +151,15 @@ tagLabel.visible = false;
 meshes.push(house1, house2,fisherman);
 scene.add(house1, house2, fisherman, floor);
 
+const defaultMaterial = new CANNON.Material('default');
+const defaultContactMaterial = new CANNON.ContactMaterial(defaultMaterial, defaultMaterial, {friction:1, restitution: 0});
+world.addContactMaterial(defaultContactMaterial);
+const floorBody = new CANNON.Body({
+    mass: 0,
+    shape: new CANNON.Plane(),
+    material: defaultMaterial,
+});
+floorBody.quaternion.setFromEuler(-Math.PI/2, 0, 0);
 const boxShape = new CANNON.Box(new CANNON.Vec3(5, 2, 1.5));
 const house1Body = new CANNON.Body({
     mass: 0,
@@ -158,7 +167,7 @@ const house1Body = new CANNON.Body({
     quaternion: new CANNON.Quaternion(house1.quaternion.x, house1.quaternion.y, house1.quaternion.z, house1.quaternion.w),
     shape: boxShape
 });
-house1Body.addEventListener('collide', () => console.log('QUASO'))
+
 const house2Body = new CANNON.Body({
     mass: 0,
     position: new CANNON.Vec3(house2.position.x, house2.position.y, house2.position.z),
@@ -166,11 +175,12 @@ const house2Body = new CANNON.Body({
     shape: boxShape
 });
 const cylinderShape = new CANNON.Cylinder(0.5, 0.5, 2, 6);
-const cylinderBody = new CANNON.Body({ mass: 1, shape: cylinderShape })
+const cylinderBody = new CANNON.Body({ mass: 1, shape: cylinderShape, position: new CANNON.Vec3(0,0,0), material: defaultMaterial });
+
+world.addBody(floorBody);
 world.addBody(cylinderBody)
 world.addBody(house1Body);
 world.addBody(house2Body);
-console.log(world)
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -347,7 +357,7 @@ function tick() {
     const deltaTime = elapsedTime - previousTime;
     previousTime = elapsedTime;
 
-    world.step(1 / 60, deltaTime, 3)
+    world.step(1 / 60, deltaTime, 3);
 
     // Direction management (keypress based direction, including direction change)
     if(person) {
@@ -394,11 +404,11 @@ function tick() {
         }
 
         if(keyMap.length === 0) {
-            distance = 0;
+            force = 0;
         } else if (rotationFraction !== 15) {
-            distance = 0.015;
+            force = 0.015;
         } else {
-            distance = 0.025;
+            force = 1.1;
         }
 
         // Avoid continuous movement when no key is pressed
@@ -448,7 +458,8 @@ function tick() {
             }
 
             if(elapsedTime - startDelay > delay) {
-                person.position.z += -distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(0, 0, force), cylinderBody.position);
+                // person.position.z += -force;
             }
         } else if(keyMap.includes('KeyW') && keyMap.includes('KeyA')) {
             if(positionDirection(positionStart, 6) !== 0 && rotationFraction === 15) {
@@ -458,7 +469,8 @@ function tick() {
             }
 
             if(elapsedTime - startDelay > delay) {
-                person.position.x += -distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(force, 0, 0), cylinderBody.position);
+                // person.position.x += -force;
             }
         } else if(keyMap.includes('KeyS') && keyMap.includes('KeyD')) {
             if(positionDirection(positionStart, 2) !== 0 && rotationFraction === 15) {
@@ -467,7 +479,8 @@ function tick() {
                 positionStart = 2;
             }
             if(elapsedTime - startDelay > delay) {
-                person.position.x += distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(force, 0, 0), cylinderBody.position);
+                // person.position.x += force;
             }
         } else if(keyMap.includes('KeyS') && keyMap.includes('KeyA')) {
             if(positionDirection(positionStart, 8) !== 0 && rotationFraction === 15) {
@@ -482,7 +495,8 @@ function tick() {
             }
 
             if(elapsedTime - startDelay > delay) {
-                person.position.z += distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(0, 0, force), cylinderBody.position);
+                // person.position.z += force;
             }
         } else if(keyMap.includes('KeyS')) {
             if(positionDirection(positionStart, 1) !== 0 && rotationFraction === 15) {
@@ -495,8 +509,9 @@ function tick() {
                 positionStart = 1;
             }
             if(elapsedTime - startDelay > delay) {
-                person.position.x += distance;
-                person.position.z += distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(force, 0, force), cylinderBody.position);
+                // person.position.x += force;
+                // person.position.z += force;
             }
         } else if(keyMap.includes('KeyW')) {
             if(positionDirection(positionStart, 5) !== 0 && rotationFraction === 15) {
@@ -505,8 +520,9 @@ function tick() {
                 positionStart = 5;
             }
             if(elapsedTime - startDelay > delay) {
-                person.position.x += -distance;
-                person.position.z += -distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(force, 0, force), cylinderBody.position);
+                // person.position.x += -force;
+                // person.position.z += -force;
             }
         } else if(keyMap.includes('KeyA')) {
             if(positionDirection(positionStart, 7) !== 0 && rotationFraction === 15) {
@@ -519,8 +535,9 @@ function tick() {
                 positionStart = 7;
             }
             if(elapsedTime - startDelay > delay) {
-                person.position.x += -distance;
-                person.position.z += distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(force, 0, force), cylinderBody.position);
+                // person.position.x += -force;
+                // person.position.z += force;
             }
         } else if(keyMap.includes('KeyD')) {
             if(positionDirection(positionStart, 3) !== 0 && rotationFraction === 15) {
@@ -529,17 +546,20 @@ function tick() {
                 positionStart = 3;
             }
             if(elapsedTime - startDelay > delay) {
-                person.position.x += distance;
-                person.position.z += -distance;
+                cylinderBody.applyLocalForce(new CANNON.Vec3(force, 0, force), cylinderBody.position);
+                // person.position.x += force;
+                // person.position.z += -force;
             }
         }
 
         if(elapsedTime - startDelay > delay) {
-            camera.position.x = person.position.x + 50;
-            camera.position.z = person.position.z + 50;
+            camera.position.x = cylinderBody.position.x + 50;
+            camera.position.z = cylinderBody.position.z + 50;
+            // camera.position.x = person.position.x + 50;
+            // camera.position.z = person.position.z + 50;
         }
 
-        cylinderBody.position.copy(person.position);
+        person.position.copy(cylinderBody.position);
     }
 
     // Rotation management upon direction change
