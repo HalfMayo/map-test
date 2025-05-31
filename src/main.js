@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import GUI from 'lil-gui';
-import {CSS2DObject, CSS2DRenderer, GLTFLoader, OrbitControls} from "three/addons";
+import {CSS2DObject, CSS2DRenderer, GLTFLoader, OBB, OrbitControls} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
 import {npcs, places} from "./npcsPlaces.js";
 import {tagName, tagDescription, npcName, placeName} from "./variables.js";
@@ -43,7 +43,7 @@ scene.add(grid, axesHelper);
 const gltfLoader = new GLTFLoader();
 
 // Variables
-let person, lastKnowPosition;
+let person, lastKnowPosition, personBB;
 const meshes = [];
 let startingRotation, rotationFactor, turn, distance;
 let animationMixer, animations, startAction;
@@ -91,6 +91,8 @@ gltfLoader.load('/models/person.glb',
         actions.idle.action.play();
         scene.add(person);
         lastKnowPosition = new THREE.Vector3(0, 0, 0);
+        personBB = new THREE.Box3().setFromObject(person);
+        console.log(person)
     },
     (progress) => console.log(progress),
     (error) => console.log(error)
@@ -104,6 +106,17 @@ house1.name = "PLACE|Fisherman's house";
 house1.position.set(-7, 2, 7);
 house1.rotation.y = Math.PI/4.5;
 const boxH1 = new THREE.Box3().setFromObject(house1);
+const obb = new OBB(boxH1.getCenter(new THREE.Vector3(0, 0, 0)), new THREE.Vector3(5, 2, 1.5));
+// const float32 = house1.geometry.attributes.position.array;
+// const arr = [];
+// for(let i = 0; i < float32.length; i++) {
+//     const newArr = [];
+//     if(i%3 === 0 && float32[i+1] > 0) {
+//         newArr.push(float32[i], float32[i+1], float32[i+2]);
+//         arr.push(newArr);
+//     }
+// }
+
 const lowH1 = boxH1.min;
 const highH1 = boxH1.max;
 const house1Vertices = [
@@ -511,7 +524,10 @@ function tick() {
             camera.position.z = person.position.z + 50;
         }
 
-        cylinderBody.position.copy(person.position);
+        personBB.copy(person.children[0].geometry.boundingBox).applyMatrix4(person.children[0].matrixWorld);
+        if(boxH1.intersectsBox(personBB)){
+            console.log('Quaso');
+        }
     }
 
     // Rotation management upon direction change
