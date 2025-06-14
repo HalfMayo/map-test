@@ -43,7 +43,7 @@ scene.add(grid, axesHelper);
 const gltfLoader = new GLTFLoader();
 
 // Variables
-let person, lastKnowPosition, personBB;
+let person, lastKnownPosition, personBB;
 const meshes = [];
 let startingRotation, rotationFactor, turn, distance;
 let animationMixer, animations, startAction;
@@ -90,9 +90,10 @@ gltfLoader.load('/models/person.glb',
         setWeight(actions.idle.action,1);
         actions.idle.action.play();
         scene.add(person);
-        lastKnowPosition = new THREE.Vector3(0, 0, 0);
+        lastKnownPosition = new THREE.Vector3(0, 0, 0);
         personBB = new THREE.Box3().setFromObject(person);
-        console.log(person)
+        person.children[0].geometry.userData.obb = new OBB().fromBox3(personBB);
+        person.userData.obb = new OBB();
     },
     (progress) => console.log(progress),
     (error) => console.log(error)
@@ -106,16 +107,10 @@ house1.name = "PLACE|Fisherman's house";
 house1.position.set(-7, 2, 7);
 house1.rotation.y = Math.PI/4.5;
 const boxH1 = new THREE.Box3().setFromObject(house1);
-const obb = new OBB(boxH1.getCenter(new THREE.Vector3(0, 0, 0)), new THREE.Vector3(5, 2, 1.5));
-// const float32 = house1.geometry.attributes.position.array;
-// const arr = [];
-// for(let i = 0; i < float32.length; i++) {
-//     const newArr = [];
-//     if(i%3 === 0 && float32[i+1] > 0) {
-//         newArr.push(float32[i], float32[i+1], float32[i+2]);
-//         arr.push(newArr);
-//     }
-// }
+house1.geometry.userData.obb = new OBB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(6, 2, 2.5));
+house1.userData.obb = new OBB();
+house1.userData.obb.copy(house1.geometry.userData.obb);
+house1.userData.obb.applyMatrix4(house1.matrixWorld);
 
 const lowH1 = boxH1.min;
 const highH1 = boxH1.max;
@@ -333,10 +328,12 @@ function tick() {
     const elapsedTime = clock.getElapsedTime();
     const deltaTime = elapsedTime - previousTime;
     previousTime = elapsedTime;
+    let prevPos;
 
     // Direction management (keypress based direction, including direction change)
     if(person) {
-        if((person.position.x !== lastKnowPosition.x || person.position.y !== lastKnowPosition.y || person.position.z !== lastKnowPosition.z) && elapsedTime >= lastSecond + 1) {
+        prevPos = new THREE.Vector3(person.position.x, person.position.y, person.position.z);
+        if((person.position.x !== lastKnownPosition.x || person.position.y !== lastKnownPosition.y || person.position.z !== lastKnownPosition.z) && elapsedTime >= lastSecond + 1) {
             for(const mesh of meshes) {
                 calcDistances(mesh);
             }
@@ -358,7 +355,7 @@ function tick() {
                 pressTip.style.display = 'none';
             }
 
-            lastKnowPosition = person.position.clone();
+            lastKnownPosition = person.position.clone();
         }
 
         // KeyUp
@@ -470,6 +467,7 @@ function tick() {
                 person.position.z += distance;
             }
         } else if(keyMap.includes('KeyS')) {
+            console.log('person OBB: ', person.children[0].geometry.userData.obb);
             if(positionDirection(positionStart, 1) !== 0 && rotationFraction === 15) {
                 if(positionStart === 7 || positionStart === 8) {
                     turn = 9;
@@ -484,6 +482,7 @@ function tick() {
                 person.position.z += distance;
             }
         } else if(keyMap.includes('KeyW')) {
+            console.log('person OBB: ', person.children[0].geometry.userData.obb);
             if(positionDirection(positionStart, 5) !== 0 && rotationFraction === 15) {
                 turn = 5;
                 rotationFactor = calcRotationFactor(positionStart, turn);
@@ -524,9 +523,16 @@ function tick() {
             camera.position.z = person.position.z + 50;
         }
 
-        personBB.copy(person.children[0].geometry.boundingBox).applyMatrix4(person.children[0].matrixWorld);
-        if(boxH1.intersectsBox(personBB)){
-            console.log('Quaso');
+        person.userData.obb.copy(person.children[0].geometry.userData.obb);
+        person.userData.obb.applyMatrix4(person.matrixWorld);
+
+        if(house1.userData.obb.intersectsOBB(person.userData.obb)){
+            console.log('quaso');
+            person.position.copy(prevPos);
+            person.userData.obb.copy(person.children[0].geometry.userData.obb);
+            person.userData.obb.applyMatrix4(person.matrixWorld);
+            camera.position.x = person.position.x + 50;
+            camera.position.z = person.position.z + 50;
         }
     }
 
