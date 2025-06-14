@@ -43,7 +43,7 @@ scene.add(grid, axesHelper);
 const gltfLoader = new GLTFLoader();
 
 // Variables
-let person, lastKnownPosition, personBB;
+let person, lastKnownPosition, personBB, personRaycaster, raycasterHelper;
 const meshes = [];
 let startingRotation, rotationFactor, turn, distance;
 let animationMixer, animations, startAction;
@@ -94,13 +94,19 @@ gltfLoader.load('/models/person.glb',
         personBB = new THREE.Box3().setFromObject(person);
         person.children[0].geometry.userData.obb = new OBB().fromBox3(personBB);
         person.userData.obb = new OBB();
+        personRaycaster = new THREE.Raycaster(person.userData.obb.center, new THREE.Vector3(0.5, 0, 0.5));
+        const dir = new THREE.Vector3( 0.5, -1, 0 );
+        const center = new THREE.Vector3( 0, 2, 0 );
+        dir.normalize();
+        raycasterHelper = new THREE.ArrowHelper(dir, center, 5, 0xffffff);
+        scene.add(raycasterHelper);
     },
     (progress) => console.log(progress),
     (error) => console.log(error)
 )
 
 //Meshes
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(50,50), houseMaterial);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10,10), houseMaterial);
 floor.rotation.x = -Math.PI / 2;
 const house1 = new THREE.Mesh(houseGeometry, houseMaterial);
 house1.name = "PLACE|Fisherman's house";
@@ -203,125 +209,12 @@ window.addEventListener('keydown', (e) => {
             goNextDialogue(e.code)
         }
     }
-
-    // if((e.code === 'KeyW' || e.code === 'KeyS' || e.code === 'KeyA' || e.code === 'KeyD') && startAction === 'idle') {
-    //     setWeight(actions.walk.action, 1);
-    //     actions.walk.action.time = 1;
-    //     actions.idle.action.crossFadeTo(actions.walk.action, 0.35, true);
-    //     actions.walk.action.play();
-    //     startAction = 'walk';
-    // }
-    //
-    // if((e.code === 'KeyW' || e.code === 'KeyS' || e.code === 'KeyA' || e.code === 'KeyD') && !keyMap.includes(e.code)) {
-    //     if(keyMap.length < 2) {
-    //         keyMap.push(e.code);
-    //         if(e.code === 'KeyW' && keyMap.includes('KeyS')) {
-    //             keyMap.splice(keyMap.indexOf('KeyS'), 1);
-    //         }
-    //         if(e.code === 'KeyS' && keyMap.includes('KeyW')) {
-    //             keyMap.splice(keyMap.indexOf('KeyW'), 1);
-    //         }
-    //         if(e.code === 'KeyA' && keyMap.includes('KeyD')) {
-    //             keyMap.splice(keyMap.indexOf('KeyD'), 1);
-    //         }
-    //         if(e.code === 'KeyD' && keyMap.includes('KeyA')) {
-    //             keyMap.splice(keyMap.indexOf('KeyA'), 1);
-    //         }
-    //     }
-    // }
-    //
-    // if(keyMap.includes('KeyW') && keyMap.includes('KeyD')) {
-    //     if(positionDirection(positionStart, 4) !== 0 && rotationFraction === 15) {
-    //         turn = 4;
-    //         rotationFactor = calcRotationFactor(positionStart, turn);
-    //         positionStart = 4;
-    //     }
-    //     person.position.z += -distance;
-    // } else if(keyMap.includes('KeyW') && keyMap.includes('KeyA')) {
-    //     if(positionDirection(positionStart, 6) !== 0 && rotationFraction === 15) {
-    //         turn = 6;
-    //         rotationFactor = calcRotationFactor(positionStart, turn);
-    //         positionStart = 6;
-    //     }
-    //     person.position.x += -distance;
-    // } else if(keyMap.includes('KeyS') && keyMap.includes('KeyD')) {
-    //     if(positionDirection(positionStart, 2) !== 0 && rotationFraction === 15) {
-    //         turn = 2;
-    //         rotationFactor = calcRotationFactor(positionStart, turn);
-    //         positionStart = 2;
-    //     }
-    //     person.position.x += distance;
-    // } else if(keyMap.includes('KeyS') && keyMap.includes('KeyA')) {
-    //     if(positionDirection(positionStart, 8) !== 0 && rotationFraction === 15) {
-    //         if(positionStart === 1) {
-    //             turn = 8;
-    //             rotationFactor = (-Math.PI / 4) * -1;
-    //         } else {
-    //             turn = 8;
-    //             rotationFactor = calcRotationFactor(positionStart, turn);
-    //         }
-    //         positionStart = 8;
-    //     }
-    //     person.position.z += distance;
-    // } else if(keyMap.includes('KeyS')) {
-    //     if(positionDirection(positionStart, 1) !== 0 && rotationFraction === 15) {
-    //         if(positionStart === 7 || positionStart === 8) {
-    //             turn = 9;
-    //         } else {
-    //             turn = 1;
-    //         }
-    //         rotationFactor = calcRotationFactor(positionStart, turn);
-    //         positionStart = 1;
-    //     }
-    //     person.position.x += distance;
-    //     person.position.z += distance;
-    // } else if(keyMap.includes('KeyW')) {
-    //     if(positionDirection(positionStart, 5) !== 0 && rotationFraction === 15) {
-    //         turn = 5;
-    //         rotationFactor = calcRotationFactor(positionStart, turn);
-    //         positionStart = 5;
-    //     }
-    //     person.position.x += -distance;
-    //     person.position.z += -distance;
-    // } else if(keyMap.includes('KeyA')) {
-    //     if(positionDirection(positionStart, 7) !== 0 && rotationFraction === 15) {
-    //         if(positionStart === 1) {
-    //             turn = -1;
-    //         } else {
-    //             turn = 7;
-    //         }
-    //         rotationFactor = calcRotationFactor(positionStart, turn);
-    //         positionStart = 7;
-    //     }
-    //     person.position.x += -distance;
-    //     person.position.z += distance;
-    // } else if(keyMap.includes('KeyD')) {
-    //     if(positionDirection(positionStart, 3) !== 0 && rotationFraction === 15) {
-    //         turn = 3;
-    //         rotationFactor = calcRotationFactor(positionStart, turn);
-    //         positionStart = 3;
-    //     }
-    //     person.position.x += distance;
-    //     person.position.z += -distance;
-    // }
-    //
-    // camera.position.x = person.position.x + 50;
-    // camera.position.z = person.position.z + 50;
 })
 
 window.addEventListener('keyup', (e) => {
     if(!showDialogue) {
         keyUpMovement = e.code;
     }
-    // if((e.code === 'KeyW' || e.code === 'KeyS' || e.code === 'KeyA' || e.code === 'KeyD')) {
-    //     keyMap.splice(keyMap.indexOf(e.code), 1);
-    //     if(keyMap.length === 0) {
-    //         setWeight(actions.idle.action, 1);
-    //         actions.idle.action.time = 1;
-    //         actions.walk.action.crossFadeTo(actions.idle.action, 0.35, true);
-    //         startAction = 'idle';
-    //     }
-    // }
 })
 
 function tick() {
@@ -526,14 +419,8 @@ function tick() {
         person.userData.obb.copy(person.children[0].geometry.userData.obb);
         person.userData.obb.applyMatrix4(person.matrixWorld);
 
-        if(house1.userData.obb.intersectsOBB(person.userData.obb)){
-            console.log('quaso');
-            person.position.copy(prevPos);
-            person.userData.obb.copy(person.children[0].geometry.userData.obb);
-            person.userData.obb.applyMatrix4(person.matrixWorld);
-            camera.position.x = person.position.x + 50;
-            camera.position.z = person.position.z + 50;
-        }
+        // personRaycaster.set(person.userData.obb.center, new THREE.Vector3(1,0,0));
+        // raycasterHelper.origin = person.userData.obb.center;
     }
 
     // Rotation management upon direction change
