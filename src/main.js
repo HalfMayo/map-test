@@ -3,7 +3,8 @@ import GUI from 'lil-gui';
 import {CSS2DObject, CSS2DRenderer, GLTFLoader, OBB, OrbitControls} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
 import {npcs, places} from "./npcsPlaces.js";
-import {tagName, tagDescription, npcName, placeName} from "./variables.js";
+import {tagName, tagDescription, npcName, placeName, direction} from "./variables.js";
+import {Vector3} from "three";
 
 // Debug
 const gui = new GUI();
@@ -94,11 +95,11 @@ gltfLoader.load('/models/person.glb',
         personBB = new THREE.Box3().setFromObject(person);
         person.children[0].geometry.userData.obb = new OBB().fromBox3(personBB);
         person.userData.obb = new OBB();
-        personRaycaster = new THREE.Raycaster(person.userData.obb.center, new THREE.Vector3(0.5, 0, 0.5));
-        const dir = new THREE.Vector3( 0.5, -1, 0 );
         const center = new THREE.Vector3( 0, 2, 0 );
+        const dir =new THREE.Vector3( 0.5, -1, 0.5 );
         dir.normalize();
-        raycasterHelper = new THREE.ArrowHelper(dir, center, 5, 0xffffff);
+        personRaycaster = new THREE.Raycaster(center, dir);
+        raycasterHelper = new THREE.ArrowHelper(dir, center, 3, 0xffffff);
         scene.add(raycasterHelper);
     },
     (progress) => console.log(progress),
@@ -225,6 +226,7 @@ function tick() {
 
     // Direction management (keypress based direction, including direction change)
     if(person) {
+        let nextDirection = personRaycaster.ray.direction;
         prevPos = new THREE.Vector3(person.position.x, person.position.y, person.position.z);
         if((person.position.x !== lastKnownPosition.x || person.position.y !== lastKnownPosition.y || person.position.z !== lastKnownPosition.z) && elapsedTime >= lastSecond + 1) {
             for(const mesh of meshes) {
@@ -268,14 +270,6 @@ function tick() {
             }
         }
 
-        if(keyMap.length === 0) {
-            distance = 0;
-        } else if (rotationFraction !== 15) {
-            distance = 0.015;
-        } else {
-            distance = 0.025;
-        }
-
         // Avoid continuous movement when no key is pressed
         if((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD')  && (pressCheck.repeat && elapsedTime - pressCheck.lastRepeat > 0.4)) {
             keyDownMovement = null;
@@ -315,112 +309,132 @@ function tick() {
             }
         }
 
-        if(keyMap.includes('KeyW') && keyMap.includes('KeyD')) {
-            if(positionDirection(positionStart, 4) !== 0 && rotationFraction === 15) {
-                turn = 4;
-                rotationFactor = calcRotationFactor(positionStart, turn);
-                positionStart = 4;
+        if(keyMap.length !== 0) {
+
+            if(personRaycaster.intersectObject(floor).length === 0) {
+                distance = 0;
+            } else if (rotationFraction !== 15) {
+                distance = 0.015;
+            } else {
+                distance = 0.025;
             }
 
-            if(elapsedTime - startDelay > delay) {
-                person.position.z += -distance;
-            }
-        } else if(keyMap.includes('KeyW') && keyMap.includes('KeyA')) {
-            if(positionDirection(positionStart, 6) !== 0 && rotationFraction === 15) {
-                turn = 6;
-                rotationFactor = calcRotationFactor(positionStart, turn);
-                positionStart = 6;
-            }
-
-            if(elapsedTime - startDelay > delay) {
-                person.position.x += -distance;
-            }
-        } else if(keyMap.includes('KeyS') && keyMap.includes('KeyD')) {
-            if(positionDirection(positionStart, 2) !== 0 && rotationFraction === 15) {
-                turn = 2;
-                rotationFactor = calcRotationFactor(positionStart, turn);
-                positionStart = 2;
-            }
-            if(elapsedTime - startDelay > delay) {
-                person.position.x += distance;
-            }
-        } else if(keyMap.includes('KeyS') && keyMap.includes('KeyA')) {
-            if(positionDirection(positionStart, 8) !== 0 && rotationFraction === 15) {
-                if(positionStart === 1) {
-                    turn = 8;
-                    rotationFactor = (-Math.PI / 4) * -1;
-                } else {
-                    turn = 8;
+            if(keyMap.includes('KeyW') && keyMap.includes('KeyD')) {
+                if(positionDirection(positionStart, 4) !== 0 && rotationFraction === 15) {
+                    turn = 4;
                     rotationFactor = calcRotationFactor(positionStart, turn);
+                    positionStart = 4;
+                    nextDirection = direction.wd;
                 }
-                positionStart = 8;
+
+                if(elapsedTime - startDelay > delay) {
+                    person.position.z += -distance;
+                }
+            } else if(keyMap.includes('KeyW') && keyMap.includes('KeyA')) {
+                if(positionDirection(positionStart, 6) !== 0 && rotationFraction === 15) {
+                    turn = 6;
+                    rotationFactor = calcRotationFactor(positionStart, turn);
+                    positionStart = 6;
+                    nextDirection = direction.wa;
+                }
+
+                if(elapsedTime - startDelay > delay) {
+                    person.position.x += -distance;
+                }
+            } else if(keyMap.includes('KeyS') && keyMap.includes('KeyD')) {
+                if(positionDirection(positionStart, 2) !== 0 && rotationFraction === 15) {
+                    turn = 2;
+                    rotationFactor = calcRotationFactor(positionStart, turn);
+                    positionStart = 2;
+                    nextDirection = direction.sd;
+                }
+                if(elapsedTime - startDelay > delay) {
+                    person.position.x += distance;
+                }
+            } else if(keyMap.includes('KeyS') && keyMap.includes('KeyA')) {
+                if(positionDirection(positionStart, 8) !== 0 && rotationFraction === 15) {
+                    if(positionStart === 1) {
+                        turn = 8;
+                        rotationFactor = (-Math.PI / 4) * -1;
+                    } else {
+                        turn = 8;
+                        rotationFactor = calcRotationFactor(positionStart, turn);
+                    }
+                    positionStart = 8;
+                    nextDirection = direction.sa;
+                }
+
+                if(elapsedTime - startDelay > delay) {
+                    person.position.z += distance;
+                }
+            } else if(keyMap.includes('KeyS')) {
+                if(positionDirection(positionStart, 1) !== 0 && rotationFraction === 15) {
+                    if(positionStart === 7 || positionStart === 8) {
+                        turn = 9;
+                    } else {
+                        turn = 1;
+                    }
+                    rotationFactor = calcRotationFactor(positionStart, turn);
+                    positionStart = 1;
+                    nextDirection = direction.s;
+                }
+                if(elapsedTime - startDelay > delay) {
+                    person.position.x += distance;
+                    person.position.z += distance;
+                }
+            } else if(keyMap.includes('KeyW')) {
+                if(positionDirection(positionStart, 5) !== 0 && rotationFraction === 15) {
+                    turn = 5;
+                    rotationFactor = calcRotationFactor(positionStart, turn);
+                    positionStart = 5;
+                    nextDirection = direction.w;
+                }
+                if(elapsedTime - startDelay > delay) {
+                    person.position.x += -distance;
+                    person.position.z += -distance;
+                }
+            } else if(keyMap.includes('KeyA')) {
+                if(positionDirection(positionStart, 7) !== 0 && rotationFraction === 15) {
+                    if(positionStart === 1) {
+                        turn = -1;
+                    } else {
+                        turn = 7;
+                    }
+                    rotationFactor = calcRotationFactor(positionStart, turn);
+                    positionStart = 7;
+                    nextDirection = direction.a;
+                }
+                if(elapsedTime - startDelay > delay) {
+                    person.position.x += -distance;
+                    person.position.z += distance;
+                }
+            } else if(keyMap.includes('KeyD')) {
+                if(positionDirection(positionStart, 3) !== 0 && rotationFraction === 15) {
+                    turn = 3;
+                    rotationFactor = calcRotationFactor(positionStart, turn);
+                    positionStart = 3;
+                    nextDirection = direction.d;
+                }
+                if(elapsedTime - startDelay > delay) {
+                    person.position.x += distance;
+                    person.position.z += -distance;
+                }
             }
 
             if(elapsedTime - startDelay > delay) {
-                person.position.z += distance;
+                camera.position.x = person.position.x + 50;
+                camera.position.z = person.position.z + 50;
             }
-        } else if(keyMap.includes('KeyS')) {
-            console.log('person OBB: ', person.children[0].geometry.userData.obb);
-            if(positionDirection(positionStart, 1) !== 0 && rotationFraction === 15) {
-                if(positionStart === 7 || positionStart === 8) {
-                    turn = 9;
-                } else {
-                    turn = 1;
-                }
-                rotationFactor = calcRotationFactor(positionStart, turn);
-                positionStart = 1;
-            }
-            if(elapsedTime - startDelay > delay) {
-                person.position.x += distance;
-                person.position.z += distance;
-            }
-        } else if(keyMap.includes('KeyW')) {
-            console.log('person OBB: ', person.children[0].geometry.userData.obb);
-            if(positionDirection(positionStart, 5) !== 0 && rotationFraction === 15) {
-                turn = 5;
-                rotationFactor = calcRotationFactor(positionStart, turn);
-                positionStart = 5;
-            }
-            if(elapsedTime - startDelay > delay) {
-                person.position.x += -distance;
-                person.position.z += -distance;
-            }
-        } else if(keyMap.includes('KeyA')) {
-            if(positionDirection(positionStart, 7) !== 0 && rotationFraction === 15) {
-                if(positionStart === 1) {
-                    turn = -1;
-                } else {
-                    turn = 7;
-                }
-                rotationFactor = calcRotationFactor(positionStart, turn);
-                positionStart = 7;
-            }
-            if(elapsedTime - startDelay > delay) {
-                person.position.x += -distance;
-                person.position.z += distance;
-            }
-        } else if(keyMap.includes('KeyD')) {
-            if(positionDirection(positionStart, 3) !== 0 && rotationFraction === 15) {
-                turn = 3;
-                rotationFactor = calcRotationFactor(positionStart, turn);
-                positionStart = 3;
-            }
-            if(elapsedTime - startDelay > delay) {
-                person.position.x += distance;
-                person.position.z += -distance;
-            }
+
+            person.userData.obb.copy(person.children[0].geometry.userData.obb);
+            person.userData.obb.applyMatrix4(person.matrixWorld);
+
+            personRaycaster.set(person.userData.obb.center, nextDirection);
+            raycasterHelper.dispose();
+            scene.remove(raycasterHelper);
+            raycasterHelper = new THREE.ArrowHelper(nextDirection, person.userData.obb.center, 3, 0xffffff);
+            scene.add(raycasterHelper);
         }
-
-        if(elapsedTime - startDelay > delay) {
-            camera.position.x = person.position.x + 50;
-            camera.position.z = person.position.z + 50;
-        }
-
-        person.userData.obb.copy(person.children[0].geometry.userData.obb);
-        person.userData.obb.applyMatrix4(person.matrixWorld);
-
-        // personRaycaster.set(person.userData.obb.center, new THREE.Vector3(1,0,0));
-        // raycasterHelper.origin = person.userData.obb.center;
     }
 
     // Rotation management upon direction change
