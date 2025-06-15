@@ -108,6 +108,7 @@ gltfLoader.load('/models/person.glb',
 
 gltfLoader.load('/models/plane-holes.glb', (gltf) => {
     floorHoles = gltf.scene.children[0];
+    floorHoles.scale.set(2,2,2);
     scene.add(floorHoles);
 })
 
@@ -257,15 +258,28 @@ function tick() {
 
             lastKnownPosition = person.position.clone();
         }
-
         // KeyUp
-        if((keyUpMovement === 'KeyW' || keyUpMovement === 'KeyS' || keyUpMovement === 'KeyA' || keyUpMovement === 'KeyD')) {
-            keyMap.splice(keyMap.indexOf(keyUpMovement), 1);
-            if(keyUpMovement === keyDownMovement) {
-                keyDownMovement = null;
+        if(keyUpMovement){
+            if ((keyUpMovement === 'KeyW' || keyUpMovement === 'KeyS' || keyUpMovement === 'KeyA' || keyUpMovement === 'KeyD')) {
+                keyMap.splice(keyMap.indexOf(keyUpMovement), 1);
+                if (keyUpMovement === keyDownMovement) {
+                    keyDownMovement = null;
+                }
+                keyUpMovement = null;
+                if (keyMap.length === 0 || (keyMap.length > 0 && !keyDownMovement)) {
+                    keyDownMovement = null;
+                    keyMap.length = 0;
+                    setWeight(actions.idle.action, 1);
+                    actions.idle.action.time = 1;
+                    actions.walk.action.crossFadeTo(actions.idle.action, 0.35, true);
+                    startAction = 'idle';
+                }
             }
-            keyUpMovement = null;
-            if(keyMap.length === 0 || (keyMap.length > 0 && !keyDownMovement)) {
+        }
+        // KeyDown
+        if(keyDownMovement) {
+            // Avoid continuous movement when no key is pressed
+            if ((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD') && (pressCheck.repeat && elapsedTime - pressCheck.lastRepeat > 0.4)) {
                 keyDownMovement = null;
                 keyMap.length = 0;
                 setWeight(actions.idle.action, 1);
@@ -273,47 +287,37 @@ function tick() {
                 actions.walk.action.crossFadeTo(actions.idle.action, 0.35, true);
                 startAction = 'idle';
             }
-        }
-
-        // Avoid continuous movement when no key is pressed
-        if((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD')  && (pressCheck.repeat && elapsedTime - pressCheck.lastRepeat > 0.4)) {
-            keyDownMovement = null;
-            keyMap.length = 0;
-            setWeight(actions.idle.action, 1);
-            actions.idle.action.time = 1;
-            actions.walk.action.crossFadeTo(actions.idle.action, 0.35, true);
-            startAction = 'idle';
-        }
 
             // KeyDown and movement
-        if((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD') && startAction === 'idle') {
-            setWeight(actions.walk.action, 1);
-            actions.walk.action.time = 1;
-            actions.idle.action.crossFadeTo(actions.walk.action, 0.35, true);
-            actions.walk.action.play();
-            startAction = 'walk';
-            startDelay = elapsedTime;
-        }
+            if ((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD') && startAction === 'idle') {
+                setWeight(actions.walk.action, 1);
+                actions.walk.action.time = 1;
+                actions.idle.action.crossFadeTo(actions.walk.action, 0.35, true);
+                actions.walk.action.play();
+                startAction = 'walk';
+                startDelay = elapsedTime;
+            }
 
-        // Avoid opposite keystrokes to be pressed at the same time
-        if((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD') && !keyMap.includes(keyDownMovement)) {
-            if(keyMap.length < 2) {
-                keyMap.push(keyDownMovement);
-                if(keyDownMovement === 'KeyW' && keyMap.includes('KeyS')) {
-                    keyMap.splice(keyMap.indexOf('KeyS'), 1);
-                }
-                if(keyDownMovement === 'KeyS' && keyMap.includes('KeyW')) {
-                    keyMap.splice(keyMap.indexOf('KeyW'), 1);
-                }
-                if(keyDownMovement === 'KeyA' && keyMap.includes('KeyD')) {
-                    keyMap.splice(keyMap.indexOf('KeyD'), 1);
-                }
-                if(keyDownMovement === 'KeyD' && keyMap.includes('KeyA')) {
-                    keyMap.splice(keyMap.indexOf('KeyA'), 1);
+            // Avoid opposite keystrokes to be pressed at the same time
+            if ((keyDownMovement === 'KeyW' || keyDownMovement === 'KeyS' || keyDownMovement === 'KeyA' || keyDownMovement === 'KeyD') && !keyMap.includes(keyDownMovement)) {
+                if (keyMap.length < 2) {
+                    keyMap.push(keyDownMovement);
+                    if (keyDownMovement === 'KeyW' && keyMap.includes('KeyS')) {
+                        keyMap.splice(keyMap.indexOf('KeyS'), 1);
+                    }
+                    if (keyDownMovement === 'KeyS' && keyMap.includes('KeyW')) {
+                        keyMap.splice(keyMap.indexOf('KeyW'), 1);
+                    }
+                    if (keyDownMovement === 'KeyA' && keyMap.includes('KeyD')) {
+                        keyMap.splice(keyMap.indexOf('KeyD'), 1);
+                    }
+                    if (keyDownMovement === 'KeyD' && keyMap.includes('KeyA')) {
+                        keyMap.splice(keyMap.indexOf('KeyA'), 1);
+                    }
                 }
             }
         }
-
+        // Movement
         if(keyMap.length !== 0) {
 
             if(personRaycaster.intersectObject(floorHoles).length === 0) {
@@ -519,7 +523,7 @@ function positionDirection(pS, pE) {
 }
 
 function calcRotationFactor(positionStart, positionEnd) {
-    console.log('turn factor: ', positionDirection(positionStart, positionEnd))
+    // console.log('turn factor: ', positionDirection(positionStart, positionEnd))
     return (-Math.PI / 4) * positionDirection(positionStart, positionEnd);
 }
 
