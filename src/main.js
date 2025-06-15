@@ -44,7 +44,7 @@ scene.add(grid, axesHelper);
 const gltfLoader = new GLTFLoader();
 
 // Variables
-let person, lastKnownPosition, personBB, personRaycaster, raycasterHelper;
+let person, floorHoles, lastKnownPosition, personBB, personRaycaster, raycasterHelper;
 const meshes = [];
 let startingRotation, rotationFactor, turn, distance;
 let animationMixer, animations, startAction;
@@ -104,11 +104,16 @@ gltfLoader.load('/models/person.glb',
     },
     (progress) => console.log(progress),
     (error) => console.log(error)
-)
+);
+
+gltfLoader.load('/models/plane-holes.glb', (gltf) => {
+    floorHoles = gltf.scene.children[0];
+    scene.add(floorHoles);
+})
 
 //Meshes
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(10,10), houseMaterial);
-floor.rotation.x = -Math.PI / 2;
+// const floor = new THREE.Mesh(new THREE.PlaneGeometry(10,10), houseMaterial);
+// floor.rotation.x = -Math.PI / 2;
 const house1 = new THREE.Mesh(houseGeometry, houseMaterial);
 house1.name = "PLACE|Fisherman's house";
 house1.position.set(-7, 2, 7);
@@ -159,7 +164,7 @@ tagLabel.center.set(0.5, 2);
 tagLabel.visible = false;
 
 meshes.push(house1, house2,fisherman);
-scene.add(house1, house2, fisherman, floor);
+scene.add(house1, house2, fisherman);
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -311,7 +316,7 @@ function tick() {
 
         if(keyMap.length !== 0) {
 
-            if(personRaycaster.intersectObject(floor).length === 0) {
+            if(personRaycaster.intersectObject(floorHoles).length === 0) {
                 distance = 0;
             } else if (rotationFraction !== 15) {
                 distance = 0.015;
