@@ -1,10 +1,9 @@
 import * as THREE from "three";
 import GUI from 'lil-gui';
-import {CSS2DObject, CSS2DRenderer, GLTFLoader, OBB, OrbitControls} from "three/addons";
+import {CSS2DObject, CSS2DRenderer, GLTFLoader, OBB, OrbitControls, SVGLoader} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
 import {npcs, places} from "./npcsPlaces.js";
 import {tagName, tagDescription, npcName, placeName, direction} from "./variables.js";
-import {Vector3} from "three";
 
 // Debug
 const gui = new GUI();
@@ -26,7 +25,7 @@ camera.position.set(50, 50, 50);
 camera.lookAt(scene.position);
 
 // Renderer
-const renderer = new THREE.WebGLRenderer({ canvas: canvas });
+const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 const cssRenderer = new CSS2DRenderer();
@@ -34,6 +33,7 @@ cssRenderer.setSize(sizes.width, sizes.height);
 cssRenderer.domElement.style.position = 'absolute';
 cssRenderer.domElement.style.top = '0px';
 document.body.appendChild( cssRenderer.domElement );
+// const controls = new OrbitControls(camera, cssRenderer.domElement);
 
 // Helpers
 const grid = new THREE.GridHelper(100, 100);
@@ -106,10 +106,59 @@ gltfLoader.load('/models/person.glb',
     (error) => console.log(error)
 );
 
-gltfLoader.load('/models/plane-holes.glb', (gltf) => {
+gltfLoader.load('/models/terrain.glb', (gltf) => {
     floorHoles = gltf.scene.children[0];
-    floorHoles.scale.set(2,2,2);
+    // floorHoles.scale.set(2,2,2);
+    console.log(floorHoles);
     scene.add(floorHoles);
+})
+
+// const svgLoader = new SVGLoader();
+//
+// svgLoader.load( '/iso-hut-3.svg', function ( paths ) {
+//
+//     const group = new THREE.Group();
+//     group.scale.multiplyScalar( 0.01 );
+//     group.position.set(-7, 0, 7);
+//
+//     for ( let i = 0; i < paths.paths.length; i ++ ) {
+//         const path = paths.paths[i];
+//         // const textmaterial = new THREE.MeshBasicMaterial({ color: path.color, side: THREE.DoubleSide, depthWrite: false });
+//         const textmaterial = new THREE.SpriteMaterial({ color: path.color});
+//         const shapes = path.toShapes( true );
+//         for ( let j = 0; j < shapes.length; j ++ ) {
+//             const shape = shapes[ j ];
+//             const geometry = new THREE.ShapeGeometry(shape);
+//             // const mesh = new THREE.Mesh( geometry, textmaterial );
+//             const mesh = new THREE.Sprite( textmaterial );
+//             mesh.geometry = geometry;
+//             group.add( mesh );
+//         }
+//     }
+//     scene.add( group );
+// } );
+
+const textureLoader = new THREE.TextureLoader();
+
+textureLoader.load('/hut-up.png', function (texture) {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    const material = new THREE.SpriteMaterial( { map: texture } );
+    const sprite = new THREE.Sprite( material );
+    //3:5 (600x1000)
+    //4:5 (800x1000)
+    sprite.scale.set(16,9,1);
+    sprite.position.set(0, 4.5, 0);
+    scene.add(sprite);
+})
+
+    textureLoader.load('/hut-down.png', function (texture) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const material2 = new THREE.SpriteMaterial( { map: texture } );
+        const sprite2 = new THREE.Sprite( material2 );
+        sprite2.scale.set(16,9,1);
+        sprite2.position.set(-9, -4.5, -9);
+    scene.add(sprite2);
+
 })
 
 //Meshes
@@ -164,7 +213,7 @@ const tagLabel = new CSS2DObject(tagDiv);
 tagLabel.center.set(0.5, 2);
 tagLabel.visible = false;
 
-meshes.push(house1, house2,fisherman);
+meshes.push(house1, house2, fisherman);
 scene.add(house1, house2, fisherman);
 
 // Lights
