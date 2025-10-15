@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import GUI from 'lil-gui';
-import {CSS2DObject, CSS2DRenderer, GLTFLoader, OBB, OrbitControls, SVGLoader} from "three/addons";
+import {GLTFLoader, OBB, OrbitControls} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
 import {npcs, places} from "./npcsPlaces.js";
 import {tagName, tagDescription, npcName, placeName, direction} from "./variables.js";
+import {Assets, Sprite, Container, Graphics, WebGLRenderer} from 'pixi.js';
 
 // Debug
 const gui = new GUI();
@@ -25,15 +26,17 @@ camera.position.set(50, 50, 50);
 camera.lookAt(scene.position);
 
 // Renderer
-const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    stencil: true,
+    alpha: true,
+    canvas: canvas,
+    context: canvas.getContext('webgl2'),
+});
+
 renderer.setSize(sizes.width, sizes.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-const cssRenderer = new CSS2DRenderer();
-cssRenderer.setSize(sizes.width, sizes.height);
-cssRenderer.domElement.style.position = 'absolute';
-cssRenderer.domElement.style.top = '0px';
-document.body.appendChild( cssRenderer.domElement );
-// const controls = new OrbitControls(camera, cssRenderer.domElement);
+renderer.autoClear = false;
 
 // Helpers
 const grid = new THREE.GridHelper(100, 100);
@@ -45,7 +48,7 @@ const gltfLoader = new GLTFLoader();
 
 // Variables
 let person, floorHoles, lastKnownPosition, personBB, personRaycaster, raycasterHelper;
-const meshes = [];
+let background, foreground;
 let startingRotation, rotationFactor, turn, distance;
 let animationMixer, animations, startAction;
 let keyDownMovement, keyUpMovement;
@@ -66,11 +69,7 @@ let showDialogue = false;
 
 // Objects and Lights
 // Geometries and Materials
-const houseGeometry = new THREE.BoxGeometry(10, 4, 3);
-const houseMaterial = new THREE.MeshStandardMaterial({
-    roughness: 0.4,
-    metalness: 0.8
-});
+
 const personMainMaterial = new THREE.MeshBasicMaterial({color: 'lightblue'});
 const personSecMaterial = new THREE.MeshBasicMaterial({color: 'darkorange'});
 
@@ -108,113 +107,11 @@ gltfLoader.load('/models/person.glb',
 
 gltfLoader.load('/models/terrain.glb', (gltf) => {
     floorHoles = gltf.scene.children[0];
-    // floorHoles.scale.set(2,2,2);
-    console.log(floorHoles);
+    floorHoles.material = new THREE.MeshBasicMaterial({transparent: true, opacity: 0});
     scene.add(floorHoles);
+    gui.add(floorHoles.position, 'x', - 100, 100, 0.05);
+    gui.add(floorHoles.position, 'z', - 100, 100, 0.05);
 })
-
-// const svgLoader = new SVGLoader();
-//
-// svgLoader.load( '/iso-hut-3.svg', function ( paths ) {
-//
-//     const group = new THREE.Group();
-//     group.scale.multiplyScalar( 0.01 );
-//     group.position.set(-7, 0, 7);
-//
-//     for ( let i = 0; i < paths.paths.length; i ++ ) {
-//         const path = paths.paths[i];
-//         // const textmaterial = new THREE.MeshBasicMaterial({ color: path.color, side: THREE.DoubleSide, depthWrite: false });
-//         const textmaterial = new THREE.SpriteMaterial({ color: path.color});
-//         const shapes = path.toShapes( true );
-//         for ( let j = 0; j < shapes.length; j ++ ) {
-//             const shape = shapes[ j ];
-//             const geometry = new THREE.ShapeGeometry(shape);
-//             // const mesh = new THREE.Mesh( geometry, textmaterial );
-//             const mesh = new THREE.Sprite( textmaterial );
-//             mesh.geometry = geometry;
-//             group.add( mesh );
-//         }
-//     }
-//     scene.add( group );
-// } );
-
-const textureLoader = new THREE.TextureLoader();
-
-textureLoader.load('/hut-up.png', function (texture) {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    const material = new THREE.SpriteMaterial( { map: texture } );
-    const sprite = new THREE.Sprite( material );
-    //3:5 (600x1000)
-    //4:5 (800x1000)
-    sprite.scale.set(16,9,1);
-    sprite.position.set(0, 4.5, 0);
-    scene.add(sprite);
-})
-
-    textureLoader.load('/hut-down.png', function (texture) {
-        texture.colorSpace = THREE.SRGBColorSpace;
-        const material2 = new THREE.SpriteMaterial( { map: texture } );
-        const sprite2 = new THREE.Sprite( material2 );
-        sprite2.scale.set(16,9,1);
-        sprite2.position.set(-9, -4.5, -9);
-    scene.add(sprite2);
-
-})
-
-//Meshes
-// const floor = new THREE.Mesh(new THREE.PlaneGeometry(10,10), houseMaterial);
-// floor.rotation.x = -Math.PI / 2;
-const house1 = new THREE.Mesh(houseGeometry, houseMaterial);
-house1.name = "PLACE|Fisherman's house";
-house1.position.set(-7, 2, 7);
-house1.rotation.y = Math.PI/4.5;
-const boxH1 = new THREE.Box3().setFromObject(house1);
-house1.geometry.userData.obb = new OBB(new THREE.Vector3(0, 0, 0), new THREE.Vector3(6, 2, 2.5));
-house1.userData.obb = new OBB();
-house1.userData.obb.copy(house1.geometry.userData.obb);
-house1.userData.obb.applyMatrix4(house1.matrixWorld);
-
-const lowH1 = boxH1.min;
-const highH1 = boxH1.max;
-const house1Vertices = [
-    new THREE.Vector3(lowH1.x, lowH1.y, lowH1.z),
-    new THREE.Vector3(highH1.x, lowH1.y, lowH1.z),
-    new THREE.Vector3(lowH1.x, lowH1.y, highH1.z),
-    new THREE.Vector3(highH1.x, lowH1.y, highH1.z)
-];
-house1.vertices = house1Vertices;
-
-const house2 = new THREE.Mesh(houseGeometry, houseMaterial);
-house2.name = "PLACE|Chef's house";
-house2.position.set(7, 2, -7);
-house2.rotation.y = Math.PI/4.5;
-const boxH2 = new THREE.Box3().setFromObject(house2);
-const lowH2 = boxH2.min;
-const highH2 = boxH2.max;
-
-const house2Vertices = [
-    new THREE.Vector3(lowH2.x, lowH2.y, lowH2.z),
-    new THREE.Vector3(highH2.x, lowH2.y, lowH2.z),
-    new THREE.Vector3(lowH2.x, lowH2.y, highH2.z),
-    new THREE.Vector3(highH2.x, lowH2.y, highH2.z)
-];
-house2.vertices = house2Vertices;
-
-const fisherman = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.2, 0.2, 1.7, 16),
-    personSecMaterial
-);
-fisherman.name = 'NPC|John Doe';
-fisherman.position.set(-2, 0.85, 7);
-fisherman.normPosition = new THREE.Vector3(-2, 0, 7);
-
-const tagDiv = document.querySelector('div.ui');
-const tagLabel = new CSS2DObject(tagDiv);
-tagLabel.center.set(0.5, 2);
-tagLabel.visible = false;
-
-meshes.push(house1, house2, fisherman);
-scene.add(house1, house2, fisherman);
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -222,6 +119,50 @@ scene.add(ambientLight);
 const directionalLight = new THREE.DirectionalLight(0xffffff, 2.5);
 directionalLight.position.set(1, 0.25, 0)
 scene.add(directionalLight);
+
+// === PIXI.JS SETUP ===
+// Create PixiJS renderer that shares the WebGL context with Three.js
+const pixiRenderer = new WebGLRenderer({ alpha: true });
+
+// Initialize PixiJS renderer with shared context
+await pixiRenderer.init({
+    width: sizes.width,
+    height: sizes.height,
+    context: canvas.getContext('webgl2'),
+    clearBeforeRender: false,
+    canvas: canvas
+});
+
+// Create PixiJS scene graph
+const bgColorStage = new Container();
+const bgColor = new Graphics().rect(0, 0, sizes.width, sizes.height).fill(0xac6d81);
+bgColorStage.addChild(bgColor);
+
+const bgStage = new Container();
+const fgStage = new Container();
+
+Assets.add({
+    alias: 'background',
+    src: '/lower-layer.png',
+});
+Assets.add({
+    alias: 'foreground',
+    src: '/upper-layer.png',
+});
+
+// Load the assets and get a resolved promise once both are loaded
+const texturesPromise = Assets.load(['background', 'foreground']); // => Promise<{flowerTop: Texture, eggHead: Texture}>
+
+// When the promise resolves, we have the texture!
+texturesPromise.then((textures) => {
+    // Create a new Sprite from the resolved loaded Textures
+    background = Sprite.from(textures.background);
+    bgStage.addChild(background);
+
+    foreground = Sprite.from(textures.foreground);
+
+    fgStage.addChild(foreground);
+})
 
 // Functions and events
 window.addEventListener('resize', () => {
@@ -236,7 +177,7 @@ window.addEventListener('resize', () => {
     renderer.setSize(sizes.width, sizes.height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    cssRenderer.setSize(sizes.width, sizes.height);
+    pixiRenderer.resize(sizes.width, sizes.height);
 });
 
 window.addEventListener('keydown', (e) => {
@@ -283,30 +224,7 @@ function tick() {
     if(person) {
         let nextDirection = personRaycaster.ray.direction;
         prevPos = new THREE.Vector3(person.position.x, person.position.y, person.position.z);
-        if((person.position.x !== lastKnownPosition.x || person.position.y !== lastKnownPosition.y || person.position.z !== lastKnownPosition.z) && elapsedTime >= lastSecond + 1) {
-            for(const mesh of meshes) {
-                calcDistances(mesh);
-            }
-            let nearestMesh = {distance: 4};
-            for(const mesh of meshes) {
-                if(mesh.distance < nearestMesh.distance) {
-                    nearestMesh.mesh = mesh;
-                    nearestMesh.distance = mesh.distance;
-                }
-            }
-            //console.log('Nearest Mesh: ', nearestMesh);
-            if(nearestMesh.mesh && !showDialogue) {
-                setTag(nearestMesh.mesh);
-                nearestMesh.mesh.add(tagLabel);
-                tagLabel.visible = true;
-                pressTip.style.display = 'block';
-            } else if(!nearestMesh.mesh) {
-                tagLabel.visible = false;
-                pressTip.style.display = 'none';
-            }
 
-            lastKnownPosition = person.position.clone();
-        }
         // KeyUp
         if(keyUpMovement){
             if ((keyUpMovement === 'KeyW' || keyUpMovement === 'KeyS' || keyUpMovement === 'KeyA' || keyUpMovement === 'KeyD')) {
@@ -371,10 +289,10 @@ function tick() {
 
             if(personRaycaster.intersectObject(floorHoles).length === 0) {
                 distance = 0;
-            } else if (rotationFraction !== 15) {
-                distance = 0.015;
+            // } else if (rotationFraction !== 15) {
+            //     distance = 0.015;
             } else {
-                distance = 0.025;
+                distance = 0.075;
             }
 
             if(keyMap.includes('KeyW') && keyMap.includes('KeyD')) {
@@ -439,6 +357,8 @@ function tick() {
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += distance;
                     person.position.z += distance;
+                    background.y -= 2.8;
+                    foreground.y -= 2.8;
                 }
             } else if(keyMap.includes('KeyW')) {
                 if(positionDirection(positionStart, 5) !== 0 && rotationFraction === 15) {
@@ -450,6 +370,8 @@ function tick() {
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += -distance;
                     person.position.z += -distance;
+                    background.y += 2.8;
+                    foreground.y += 2.8;
                 }
             } else if(keyMap.includes('KeyA')) {
                 if(positionDirection(positionStart, 7) !== 0 && rotationFraction === 15) {
@@ -555,8 +477,19 @@ function tick() {
 
     if(elapsedTime >= lastSecond + 1) lastSecond = elapsedTime;
 
+    // Render PixiJS scene
+    pixiRenderer.resetState();
+    pixiRenderer.render({ container: bgColorStage, clear:false });
+
+    pixiRenderer.resetState();
+    pixiRenderer.render({ container: bgStage, clear:false });
+    // Render Three.js scene
+    renderer.resetState();
     renderer.render(scene, camera);
-    cssRenderer.render(scene, camera);
+
+    pixiRenderer.resetState();
+    pixiRenderer.render({ container: fgStage, clear:false });
+
     window.requestAnimationFrame(tick);
 }
 
@@ -574,36 +507,6 @@ function positionDirection(pS, pE) {
 function calcRotationFactor(positionStart, positionEnd) {
     // console.log('turn factor: ', positionDirection(positionStart, positionEnd))
     return (-Math.PI / 4) * positionDirection(positionStart, positionEnd);
-}
-
-function setTag(mesh) {
-    const type = mesh.name.split('|')[0];
-    const elementName = mesh.name.split('|')[1];
-    if(type === 'NPC') {
-        const npc = npcs.filter(el => el.name === elementName);
-        tagName.textContent = npc[0].name;
-        tagDescription.textContent = npc[0].description;
-        npcName.textContent = npc[0].name + ', ' + npc[0].description;
-    } else {
-        const place = places.filter(el => el.name === elementName);
-        tagName.textContent = place[0].name;
-        tagDescription.textContent = '';
-        placeName.textContent = place[0].name;
-    }
-    setStarter(elementName, type);
-}
-
-function calcDistances(mesh) {
-    if(mesh.vertices) {
-        const distances = [];
-        for(const vertex of mesh.vertices) {
-            distances.push(vertex.distanceTo(person.position));
-        }
-        mesh.distance = Math.min(...distances);
-    } else {
-        mesh.distance = mesh.normPosition.distanceTo(person.position);
-    }
-    // console.log(mesh.name, mesh.distance);
 }
 
 // Animate
