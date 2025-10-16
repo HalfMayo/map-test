@@ -73,6 +73,40 @@ let showDialogue = false;
 const personMainMaterial = new THREE.MeshBasicMaterial({color: 'lightblue'});
 const personSecMaterial = new THREE.MeshBasicMaterial({color: 'darkorange'});
 
+floorHoles = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshBasicMaterial({transparent: true, opacity:0}));
+floorHoles.rotation.x = -Math.PI / 2;
+scene.add(floorHoles)
+
+const cube = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+cube.rotation.x = -Math.PI / 2;
+cube.position.set(2.75, 0.05, 13.25);
+
+const cube2 = new THREE.Mesh(new THREE.PlaneGeometry(11, 7), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+cube2.rotation.x = -Math.PI / 2;
+cube2.position.set(0, 0.05, 19.5);
+
+const cube3 = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+cube3.rotation.x = -Math.PI / 2;
+cube3.position.set(16.75, 0.05, -0.5);
+
+const cube4 = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 6), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+cube4.rotation.x = -Math.PI / 2;
+cube4.rotation.z = 2.55840734641021;
+cube4.position.set(2, 0.05, 6.4);
+
+const cube5 = new THREE.Mesh(new THREE.PlaneGeometry(11.025, 7.2), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+cube5.rotation.x = -Math.PI / 2;
+cube5.rotation.z = -1.05159265358979;
+cube5.position.set(8.5, 0.05, 0.4);
+
+// gui.add(cube5.position, 'x', - 100, 100, 0.1);
+// gui.add(cube5.position, 'z', - 100, 100, 0.1);
+// gui.add(cube5.scale, 'x', - 100, 100, 0.1);
+// gui.add(cube5.scale, 'y', - 100, 100, 0.1);
+// gui.add(cube5.rotation, 'z', - Math.PI, Math.PI, 0.01);
+
+scene.add(cube, cube2, cube3, cube4, cube5);
+
 // Models
 gltfLoader.load('/models/person.glb',
     (gltf) => {
@@ -105,13 +139,13 @@ gltfLoader.load('/models/person.glb',
     (error) => console.log(error)
 );
 
-gltfLoader.load('/models/terrain.glb', (gltf) => {
-    floorHoles = gltf.scene.children[0];
-    floorHoles.material = new THREE.MeshBasicMaterial({transparent: true, opacity: 0});
-    scene.add(floorHoles);
-    gui.add(floorHoles.position, 'x', - 100, 100, 0.05);
-    gui.add(floorHoles.position, 'z', - 100, 100, 0.05);
-})
+// gltfLoader.load('/models/terrain.glb', (gltf) => {
+//     floorHoles = gltf.scene.children[0];
+//     floorHoles.material = new THREE.MeshBasicMaterial({transparent: true, opacity: 0});
+//     scene.add(floorHoles);
+//     gui.add(floorHoles.position, 'x', - 100, 100, 0.05);
+//     gui.add(floorHoles.position, 'z', - 100, 100, 0.05);
+// })
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 1);
@@ -287,12 +321,18 @@ function tick() {
         // Movement
         if(keyMap.length !== 0) {
 
-            if(personRaycaster.intersectObject(floorHoles).length === 0) {
+            if(personRaycaster.intersectObject(floorHoles).length === 0
+                || personRaycaster.intersectObject(cube).length !== 0
+                || personRaycaster.intersectObject(cube2).length !== 0
+                || personRaycaster.intersectObject(cube3).length !== 0
+                || personRaycaster.intersectObject(cube4).length !== 0
+                || personRaycaster.intersectObject(cube5).length !== 0
+            ) {
                 distance = 0;
             // } else if (rotationFraction !== 15) {
             //     distance = 0.015;
             } else {
-                distance = 0.075;
+                distance = 0.025;
             }
 
             if(keyMap.includes('KeyW') && keyMap.includes('KeyD')) {
@@ -305,6 +345,10 @@ function tick() {
 
                 if(elapsedTime - startDelay > delay) {
                     person.position.z += -distance;
+                    background.y += 0.935/2;
+                    foreground.y += 0.935/2;
+                    background.x -= 1.61/2;
+                    foreground.x -= 1.61/2;
                 }
             } else if(keyMap.includes('KeyW') && keyMap.includes('KeyA')) {
                 if(positionDirection(positionStart, 6) !== 0 && rotationFraction === 15) {
@@ -316,6 +360,10 @@ function tick() {
 
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += -distance;
+                    background.y += 0.935/2;
+                    foreground.y += 0.935/2;
+                    background.x += 1.61/2;
+                    foreground.x += 1.61/2;
                 }
             } else if(keyMap.includes('KeyS') && keyMap.includes('KeyD')) {
                 if(positionDirection(positionStart, 2) !== 0 && rotationFraction === 15) {
@@ -326,6 +374,10 @@ function tick() {
                 }
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += distance;
+                    background.y -= 0.935/2;
+                    foreground.y -= 0.935/2;
+                    background.x -= 1.61/2;
+                    foreground.x -= 1.61/2;
                 }
             } else if(keyMap.includes('KeyS') && keyMap.includes('KeyA')) {
                 if(positionDirection(positionStart, 8) !== 0 && rotationFraction === 15) {
@@ -342,6 +394,10 @@ function tick() {
 
                 if(elapsedTime - startDelay > delay) {
                     person.position.z += distance;
+                    background.y -= 0.935/2;
+                    foreground.y -= 0.935/2;
+                    background.x += 1.61/2;
+                    foreground.x += 1.61/2;
                 }
             } else if(keyMap.includes('KeyS')) {
                 if(positionDirection(positionStart, 1) !== 0 && rotationFraction === 15) {
@@ -357,8 +413,8 @@ function tick() {
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += distance;
                     person.position.z += distance;
-                    background.y -= 2.8;
-                    foreground.y -= 2.8;
+                    background.y -= 0.935;
+                    foreground.y -= 0.935;
                 }
             } else if(keyMap.includes('KeyW')) {
                 if(positionDirection(positionStart, 5) !== 0 && rotationFraction === 15) {
@@ -370,8 +426,8 @@ function tick() {
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += -distance;
                     person.position.z += -distance;
-                    background.y += 2.8;
-                    foreground.y += 2.8;
+                    background.y += 0.935;
+                    foreground.y += 0.935;
                 }
             } else if(keyMap.includes('KeyA')) {
                 if(positionDirection(positionStart, 7) !== 0 && rotationFraction === 15) {
@@ -387,6 +443,8 @@ function tick() {
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += -distance;
                     person.position.z += distance;
+                    background.x += 1.61;
+                    foreground.x += 1.61;
                 }
             } else if(keyMap.includes('KeyD')) {
                 if(positionDirection(positionStart, 3) !== 0 && rotationFraction === 15) {
@@ -398,6 +456,8 @@ function tick() {
                 if(elapsedTime - startDelay > delay) {
                     person.position.x += distance;
                     person.position.z += -distance;
+                    background.x -= 1.61;
+                    foreground.x -= 1.61;
                 }
             }
 
