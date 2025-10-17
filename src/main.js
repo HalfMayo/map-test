@@ -80,32 +80,51 @@ scene.add(floorHoles);
 const cube = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
 cube.rotation.x = -Math.PI / 2;
 cube.position.set(2.75, 0.05, 13.25);
+const info = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
+info.rotation.x = -Math.PI / 2;
+info.position.set(5.75, 0.05, 13.25);
 
 const cube2 = new THREE.Mesh(new THREE.PlaneGeometry(11, 7), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
 cube2.rotation.x = -Math.PI / 2;
 cube2.position.set(0, 0.05, 19.5);
+const info2 = new THREE.Mesh(new THREE.PlaneGeometry(3, 7), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
+info2.rotation.x = -Math.PI / 2;
+info2.position.set(7, 0.05, 19.5);
 
 const cube3 = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
 cube3.rotation.x = -Math.PI / 2;
 cube3.position.set(16.75, 0.05, -0.5);
+const info3 = new THREE.Mesh(new THREE.PlaneGeometry(5, 3), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
+info3.rotation.x = -Math.PI / 2;
+info3.position.set(16.75, 0.05, 3.5);
 
-const cube4 = new THREE.Mesh(new THREE.PlaneGeometry(10.5, 6), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+// width:10.5
+const cube4 = new THREE.Mesh(new THREE.PlaneGeometry(9, 6), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
 cube4.rotation.x = -Math.PI / 2;
 cube4.rotation.z = 2.55840734641021;
 cube4.position.set(2, 0.05, 6.4);
-
-const cube5 = new THREE.Mesh(new THREE.PlaneGeometry(11.025, 7.2), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+const info4 = new THREE.Mesh(new THREE.PlaneGeometry(3, 6), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
+info4.rotation.x = -Math.PI / 2;
+info4.rotation.z = 2.55840734641021;
+info4.position.set(7, 0.05, 9.7);
+// width:11.025
+const cube5 = new THREE.Mesh(new THREE.PlaneGeometry(10, 7.2), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
 cube5.rotation.x = -Math.PI / 2;
 cube5.rotation.z = -1.05159265358979;
-cube5.position.set(8.5, 0.05, 0.4);
+// x:8.5, z:0.4
+cube5.position.set(9, 0.05, -0.2);
+const info5 = new THREE.Mesh(new THREE.PlaneGeometry(3, 7.2), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
+info5.rotation.x = -Math.PI / 2;
+info5.rotation.z = -1.05159265358979;
+info5.position.set(12.2, 0.05, 5.4);
 
-// gui.add(cube5.position, 'x', - 100, 100, 0.1);
-// gui.add(cube5.position, 'z', - 100, 100, 0.1);
+// gui.add(info5.position, 'x', - 100, 100, 0.1);
+// gui.add(info5.position, 'z', - 100, 100, 0.1);
 // gui.add(cube5.scale, 'x', - 100, 100, 0.1);
 // gui.add(cube5.scale, 'y', - 100, 100, 0.1);
 // gui.add(cube5.rotation, 'z', - Math.PI, Math.PI, 0.01);
 
-scene.add(cube, cube2, cube3, cube4, cube5);
+scene.add(cube, cube2, cube3, cube4, cube5, info, info2, info3, info4, info5);
 
 // Models
 gltfLoader.load('/models/person.glb',
