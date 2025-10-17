@@ -75,7 +75,7 @@ const personSecMaterial = new THREE.MeshBasicMaterial({color: 'darkorange'});
 
 floorHoles = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshBasicMaterial({transparent: true, opacity:0}));
 floorHoles.rotation.x = -Math.PI / 2;
-scene.add(floorHoles)
+scene.add(floorHoles);
 
 const cube = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
 cube.rotation.x = -Math.PI / 2;
@@ -139,12 +139,11 @@ gltfLoader.load('/models/person.glb',
     (error) => console.log(error)
 );
 
-// gltfLoader.load('/models/terrain.glb', (gltf) => {
+// gltfLoader.load('/models/floor.glb', (gltf) => {
 //     floorHoles = gltf.scene.children[0];
-//     floorHoles.material = new THREE.MeshBasicMaterial({transparent: true, opacity: 0});
+//     floorHoles.position.set(0,0,0);
+//     // floorHoles.material = new THREE.MeshBasicMaterial({transparent: true, opacity: 0});
 //     scene.add(floorHoles);
-//     gui.add(floorHoles.position, 'x', - 100, 100, 0.05);
-//     gui.add(floorHoles.position, 'z', - 100, 100, 0.05);
 // })
 
 // Lights
