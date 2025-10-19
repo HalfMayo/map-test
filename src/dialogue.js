@@ -1,5 +1,6 @@
-import {dialogueBoxMc, dialogueBoxNpc, textMc, textNpc, lineMc, lineNpc, descriptionBoxPlace, textPlace, linePlace} from "./variables.js";
-import {npcs, places} from "./npcsPlaces.js";
+import {dialogueBoxMc, dialogueBoxNpc, textMc, textNpc, lineMc, lineNpc, descriptionBoxPlace, textPlace, linePlace, placeName, npcName} from "./variables.js";
+import {npcs} from "./npcs.js";
+import {places} from "./places.js";
 
 let dialogueStep = 0;
 let starter;
@@ -9,8 +10,9 @@ let dialogue;
 
 function setStarter(speakerName, type) {
     switch (type) {
-        case 'NPC':
-            const npc = npcs.filter(el => el.name === speakerName)[0];
+        case 'npc':
+            const npc = npcs.filter(el => el.objName === speakerName)[0];
+            npcName.textContent = npc.name;
             dialogue = npc.dialogue;
             lines = Object.keys(dialogue);
 
@@ -24,8 +26,9 @@ function setStarter(speakerName, type) {
                 starter = dialogueBoxNpc;
             }
             break;
-        case 'PLACE':
-            const place = places.filter(el => el.name === speakerName)[0];
+        case 'place':
+            const place = places.filter(el => el.objName === speakerName)[0];
+            placeName.textContent = place.name;
             dialogue = place.longDescription;
             lines = Object.keys(dialogue);
             if(dialogue.length > 1) {

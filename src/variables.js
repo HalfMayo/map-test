@@ -13,6 +13,7 @@ const textPlace = document.getElementById('text-place');
 const linePlace = document.getElementById('line-place');
 const npcName = document.getElementById('npc-name');
 const placeName = document.getElementById('place-name');
+const pressTip = document.getElementById('press-tip');
 
 const direction = {
     w: new Vector3( -0.5, -1, -0.5 ),
@@ -34,4 +35,4 @@ direction.wa = direction.wa.normalize();
 direction.sd = direction.sd.normalize();
 direction.sa = direction.sa.normalize();
 
-export { dialogueBoxNpc, textNpc, lineNpc, dialogueBoxMc,textMc, lineMc, tagName, tagDescription, descriptionBoxPlace, textPlace, linePlace, npcName, placeName, direction };
+export { dialogueBoxNpc, textNpc, lineNpc, dialogueBoxMc,textMc, lineMc, tagName, tagDescription, descriptionBoxPlace, textPlace, linePlace, npcName, placeName, direction, pressTip };

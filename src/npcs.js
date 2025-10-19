@@ -1,5 +1,6 @@
 const npcs = [
     {
+        objName: 'fisherman_john_doe',
         name: 'John Doe',
         description: 'Fisherman',
         dialogue: [
@@ -31,17 +32,4 @@ const npcs = [
     }
 ]
 
-const places = [
-    {
-        name: "Fisherman's house",
-        longDescription: ['1: Ut tortor risus, dapibus malesuada enim vel, rutrum tincidunt massa. Aliquam eleifend, risus vitae porta malesuada, ligula nisi aliquet quam, nec lacinia massa massa at magna. Nunc laoreet massa ut orci ornare, et auctor erat consectetur.',
-            '2: Pellentesque laoreet, justo nec placerat dapibus, augue sapien mattis turpis, tincidunt placerat tellus magna sed ipsum. Cras lobortis nisi lorem, id semper justo convallis a. Suspendisse eget velit tempor, interdum risus vitae, porta felis. Nulla eget consectetur eros. Nam blandit vel dolor sit amet interdum.']
-
-    },
-    {
-        name: "Chef's house",
-        longDescription: ['Ut tortor risus, dapibus malesuada enim vel, rutrum tincidunt massa. Aliquam eleifend, risus vitae porta malesuada, ligula nisi aliquet quam, nec lacinia massa massa at magna. Nunc laoreet massa ut orci ornare, et auctor erat consectetur. Pellentesque laoreet, justo nec placerat dapibus, augue sapien mattis turpis, tincidunt placerat tellus magna sed ipsum. Cras lobortis nisi lorem, id semper justo convallis a. Suspendisse eget velit tempor, interdum risus vitae, porta felis. Nulla eget consectetur eros. Nam blandit vel dolor sit amet interdum.']
-    }
-]
-
-export {npcs, places}
+export {npcs}

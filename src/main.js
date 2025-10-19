@@ -2,17 +2,17 @@ import * as THREE from "three";
 import GUI from 'lil-gui';
 import {GLTFLoader, OBB, OrbitControls} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
-import {npcs, places} from "./npcsPlaces.js";
-import {tagName, tagDescription, npcName, placeName, direction} from "./variables.js";
+import {npcs} from "./npcs.js";
+import {places} from "./places.js";
+import {tagName, tagDescription, npcName, placeName, direction, pressTip} from "./variables.js";
 import {Assets, Sprite, Container, Graphics, WebGLRenderer} from 'pixi.js';
+import info from "three/src/renderers/common/Info.js";
 
 // Debug
 const gui = new GUI();
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl');
-
-const pressTip = document.getElementById('press-tip');
 
 // Scene
 const scene = new THREE.Scene();
@@ -65,6 +65,7 @@ let previousTime = 0;
 let lastSecond = 0;
 let startDelay = 0;
 const delay = 0.2;
+let dialogueReady = false;
 let showDialogue = false;
 
 // Objects and Lights
@@ -77,46 +78,53 @@ floorHoles = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshBasic
 floorHoles.rotation.x = -Math.PI / 2;
 scene.add(floorHoles);
 
-const cube = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
-cube.rotation.x = -Math.PI / 2;
-cube.position.set(2.75, 0.05, 13.25);
-const info = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
-info.rotation.x = -Math.PI / 2;
-info.position.set(5.75, 0.05, 13.25);
+const warehouseSmNWZ = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+warehouseSmNWZ.rotation.x = -Math.PI / 2;
+warehouseSmNWZ.position.set(2.75, 0.05, 13.25);
+const warehouseSmIZ = new THREE.Mesh(new THREE.PlaneGeometry(3,  4.75), new THREE.MeshBasicMaterial({color:0x376d97, transparent: true, opacity:0.5}));
+warehouseSmIZ.rotation.x = -Math.PI / 2;
+warehouseSmIZ.position.set(5.75, 0.05, 13.25);
+warehouseSmIZ.name = 'warehouseSm';
 
-const cube2 = new THREE.Mesh(new THREE.PlaneGeometry(11, 7), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
-cube2.rotation.x = -Math.PI / 2;
-cube2.position.set(0, 0.05, 19.5);
-const info2 = new THREE.Mesh(new THREE.PlaneGeometry(3, 7), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
-info2.rotation.x = -Math.PI / 2;
-info2.position.set(7, 0.05, 19.5);
+const neighbourFarNWZ = new THREE.Mesh(new THREE.PlaneGeometry(11, 7), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+neighbourFarNWZ.rotation.x = -Math.PI / 2;
+neighbourFarNWZ.position.set(0, 0.05, 19.5);
+const neighbourFarIZ = new THREE.Mesh(new THREE.PlaneGeometry(3, 7), new THREE.MeshBasicMaterial({color:0x379790, transparent: true, opacity:0.5}));
+neighbourFarIZ.rotation.x = -Math.PI / 2;
+neighbourFarIZ.position.set(7, 0.05, 19.5);
+neighbourFarIZ.name = 'neighbourFar';
 
-const cube3 = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
-cube3.rotation.x = -Math.PI / 2;
-cube3.position.set(16.75, 0.05, -0.5);
-const info3 = new THREE.Mesh(new THREE.PlaneGeometry(5, 3), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
-info3.rotation.x = -Math.PI / 2;
-info3.position.set(16.75, 0.05, 3.5);
+const warehouseMdNWZ = new THREE.Mesh(new THREE.PlaneGeometry(5, 5), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+warehouseMdNWZ.rotation.x = -Math.PI / 2;
+warehouseMdNWZ.position.set(16.75, 0.05, -0.5);
+const warehouseMdIZ = new THREE.Mesh(new THREE.PlaneGeometry(5, 3), new THREE.MeshBasicMaterial({color:0x6aca1b, transparent: true, opacity:0.5}));
+warehouseMdIZ.rotation.x = -Math.PI / 2;
+warehouseMdIZ.position.set(16.75, 0.05, 3.5);
+warehouseMdIZ.name = 'warehouseMd';
 
 // width:10.5
-const cube4 = new THREE.Mesh(new THREE.PlaneGeometry(9, 6), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
-cube4.rotation.x = -Math.PI / 2;
-cube4.rotation.z = 2.55840734641021;
-cube4.position.set(2, 0.05, 6.4);
-const info4 = new THREE.Mesh(new THREE.PlaneGeometry(3, 6), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
-info4.rotation.x = -Math.PI / 2;
-info4.rotation.z = 2.55840734641021;
-info4.position.set(7, 0.05, 9.7);
+const neighbourNearNWZ = new THREE.Mesh(new THREE.PlaneGeometry(9, 6), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+neighbourNearNWZ.rotation.x = -Math.PI / 2;
+neighbourNearNWZ.rotation.z = 2.55840734641021;
+neighbourNearNWZ.position.set(2, 0.05, 6.4);
+const neighbourNearIZ = new THREE.Mesh(new THREE.PlaneGeometry(3, 6), new THREE.MeshBasicMaterial({color:0xca881b, transparent: true, opacity:0.5}));
+neighbourNearIZ.rotation.x = -Math.PI / 2;
+neighbourNearIZ.rotation.z = 2.55840734641021;
+neighbourNearIZ.position.set(7, 0.05, 9.7);
+neighbourNearIZ.name = 'neighbourNear';
 // width:11.025
-const cube5 = new THREE.Mesh(new THREE.PlaneGeometry(10, 7.2), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
-cube5.rotation.x = -Math.PI / 2;
-cube5.rotation.z = -1.05159265358979;
+const homeNWZ = new THREE.Mesh(new THREE.PlaneGeometry(10, 7.2), new THREE.MeshBasicMaterial({transparent: true, opacity:0.5}));
+homeNWZ.rotation.x = -Math.PI / 2;
+homeNWZ.rotation.z = -1.05159265358979;
 // x:8.5, z:0.4
-cube5.position.set(9, 0.05, -0.2);
-const info5 = new THREE.Mesh(new THREE.PlaneGeometry(3, 7.2), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
-info5.rotation.x = -Math.PI / 2;
-info5.rotation.z = -1.05159265358979;
-info5.position.set(12.2, 0.05, 5.4);
+homeNWZ.position.set(9, 0.05, -0.2);
+const homeIZ = new THREE.Mesh(new THREE.PlaneGeometry(3, 7.2), new THREE.MeshBasicMaterial({color:0xff0000, transparent: true, opacity:0.5}));
+homeIZ.rotation.x = -Math.PI / 2;
+homeIZ.rotation.z = -1.05159265358979;
+homeIZ.position.set(12.2, 0.05, 5.4);
+homeIZ.name = 'home';
+
+const infoZones = [neighbourFarIZ, neighbourNearIZ, homeIZ,warehouseMdIZ, warehouseSmIZ];
 
 // gui.add(info5.position, 'x', - 100, 100, 0.1);
 // gui.add(info5.position, 'z', - 100, 100, 0.1);
@@ -124,7 +132,7 @@ info5.position.set(12.2, 0.05, 5.4);
 // gui.add(cube5.scale, 'y', - 100, 100, 0.1);
 // gui.add(cube5.rotation, 'z', - Math.PI, Math.PI, 0.01);
 
-scene.add(cube, cube2, cube3, cube4, cube5, info, info2, info3, info4, info5);
+scene.add(warehouseSmNWZ, neighbourFarNWZ, warehouseMdNWZ, neighbourNearNWZ, homeNWZ, warehouseSmIZ, neighbourFarIZ, warehouseMdIZ, neighbourNearIZ, homeIZ);
 
 // Models
 gltfLoader.load('/models/person.glb',
@@ -240,21 +248,19 @@ window.addEventListener('keydown', (e) => {
         pressCheck.repeat = e.repeat;
         pressCheck.lastRepeat = clock.getElapsedTime();
     } else {
-        if(e.code === 'KeyE' && tagLabel.visible) {
+        if(e.code === 'KeyE' && dialogueReady) {
+            setStarter(personRaycaster.intersectObjects(infoZones)[0].object.name, 'place');
             starter.style.display = 'flex';
             showDialogue = true;
-            pressTip.style.display = 'none';
-            tagLabel.visible = false;
         }
         if(e.code === 'Escape' && showDialogue) {
             resetDialogueStep();
             starter.style.display = 'none';
             if(otherActor) otherActor.style.display = 'none';
             showDialogue = false;
-            pressTip.style.display = 'block';
-            tagLabel.visible = true;
         }
         if((e.code === 'ArrowRight' || e.code === 'ArrowLeft') && showDialogue) {
+            e.preventDefault();
             goNextDialogue(e.code)
         }
     }
@@ -276,6 +282,20 @@ function tick() {
     if(person) {
         let nextDirection = personRaycaster.ray.direction;
         prevPos = new THREE.Vector3(person.position.x, person.position.y, person.position.z);
+
+        // Proximity check
+        if(personRaycaster.intersectObjects(infoZones).length > 0) {
+            if(showDialogue && dialogueReady) {
+                pressTip.style.display = 'none';
+                dialogueReady = false;
+            } else if(!showDialogue && !dialogueReady){
+                pressTip.style.display = 'block';
+                dialogueReady = true;
+            }
+        } else if(personRaycaster.intersectObjects(infoZones).length === 0 && dialogueReady) {
+            pressTip.style.display = 'none';
+            dialogueReady = false;
+        }
 
         // KeyUp
         if(keyUpMovement){
@@ -340,11 +360,11 @@ function tick() {
         if(keyMap.length !== 0) {
 
             if(personRaycaster.intersectObject(floorHoles).length === 0
-                || personRaycaster.intersectObject(cube).length !== 0
-                || personRaycaster.intersectObject(cube2).length !== 0
-                || personRaycaster.intersectObject(cube3).length !== 0
-                || personRaycaster.intersectObject(cube4).length !== 0
-                || personRaycaster.intersectObject(cube5).length !== 0
+                || personRaycaster.intersectObject(warehouseSmNWZ).length !== 0
+                || personRaycaster.intersectObject(neighbourFarNWZ).length !== 0
+                || personRaycaster.intersectObject(warehouseMdNWZ).length !== 0
+                || personRaycaster.intersectObject(neighbourNearNWZ).length !== 0
+                || personRaycaster.intersectObject(homeNWZ).length !== 0
             ) {
                 distance = 0;
             // } else if (rotationFraction !== 15) {
