@@ -12,7 +12,7 @@ function setStarter(speakerName, type) {
     switch (type) {
         case 'npc':
             const npc = npcs.filter(el => el.objName === speakerName)[0];
-            npcName.textContent = npc.name;
+            npcName.textContent = npc.name + ', ' + npc.description;
             dialogue = npc.dialogue;
             lines = Object.keys(dialogue);
 

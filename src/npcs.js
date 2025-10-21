@@ -1,7 +1,7 @@
 const npcs = [
     {
-        objName: 'fisherman_john_doe',
-        name: 'John Doe',
+        objName: 'fisherman_jane_doe',
+        name: 'Jane Doe',
         description: 'Fisherman',
         dialogue: [
             {

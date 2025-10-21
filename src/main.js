@@ -1,12 +1,13 @@
 import * as THREE from "three";
 import GUI from 'lil-gui';
-import {GLTFLoader, OBB, OrbitControls} from "three/addons";
+import {GLTFLoader, OBB} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
 import {npcs} from "./npcs.js";
 import {places} from "./places.js";
 import {tagName, tagDescription, npcName, placeName, direction, pressTip} from "./variables.js";
-import {Assets, Sprite, Container, Graphics, WebGLRenderer} from 'pixi.js';
-import info from "three/src/renderers/common/Info.js";
+import {Assets, Sprite, Container, Graphics, WebGLRenderer, BitmapText} from 'pixi.js';
+import '@pixi/layout';
+import {LayoutContainer} from "@pixi/layout/components";
 
 // Debug
 const gui = new GUI();
@@ -50,7 +51,7 @@ const gltfLoader = new GLTFLoader();
 let person, floorHoles, lastKnownPosition, personBB, personRaycaster, raycasterHelper;
 let background, foreground;
 let startingRotation, rotationFactor, turn, distance;
-let animationMixer, animations, startAction;
+let animationMixer, oldWAnimationMixer, animations, startAction;
 let keyDownMovement, keyUpMovement;
 let rotationFraction = 15;
 const actions = {
@@ -124,7 +125,14 @@ homeIZ.rotation.z = -1.05159265358979;
 homeIZ.position.set(12.2, 0.05, 5.4);
 homeIZ.name = 'home';
 
-const infoZones = [neighbourFarIZ, neighbourNearIZ, homeIZ,warehouseMdIZ, warehouseSmIZ];
+const fishermanIZ = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({color:0x2bfbe7, transparent: true, opacity:0.5}));
+fishermanIZ.rotation.x = -Math.PI / 2;
+fishermanIZ.rotation.z = 2.55840734641021;
+fishermanIZ.position.set(10, 0.05, 10);
+fishermanIZ.name = 'fisherman_jane_doe';
+
+const infoZones = [neighbourFarIZ, neighbourNearIZ, homeIZ, warehouseMdIZ, warehouseSmIZ];
+const npcsZones = [fishermanIZ];
 
 // gui.add(info5.position, 'x', - 100, 100, 0.1);
 // gui.add(info5.position, 'z', - 100, 100, 0.1);
@@ -132,7 +140,7 @@ const infoZones = [neighbourFarIZ, neighbourNearIZ, homeIZ,warehouseMdIZ, wareho
 // gui.add(cube5.scale, 'y', - 100, 100, 0.1);
 // gui.add(cube5.rotation, 'z', - Math.PI, Math.PI, 0.01);
 
-scene.add(warehouseSmNWZ, neighbourFarNWZ, warehouseMdNWZ, neighbourNearNWZ, homeNWZ, warehouseSmIZ, neighbourFarIZ, warehouseMdIZ, neighbourNearIZ, homeIZ);
+scene.add(warehouseSmNWZ, neighbourFarNWZ, warehouseMdNWZ, neighbourNearNWZ, homeNWZ, warehouseSmIZ, neighbourFarIZ, warehouseMdIZ, neighbourNearIZ, homeIZ, fishermanIZ);
 
 // Models
 gltfLoader.load('/models/person.glb',
@@ -161,6 +169,29 @@ gltfLoader.load('/models/person.glb',
         personRaycaster = new THREE.Raycaster(center, dir);
         raycasterHelper = new THREE.ArrowHelper(dir, center, 3, 0xffffff);
         scene.add(raycasterHelper);
+    },
+    (progress) => console.log(progress),
+    (error) => console.log(error)
+);
+
+gltfLoader.load('/models/sitting-person.glb',
+    (gltf) => {
+        const oldWoman = gltf.scene.children[0];
+        console.log('oldWoman: ', gltf);
+        oldWoman.children[1].material = personSecMaterial;
+        oldWoman.children[0].material = personMainMaterial;
+
+        oldWoman.rotation.z = -Math.PI / 4;
+        oldWoman.position.z = 10;
+        oldWoman.position.x = 10;
+        oldWAnimationMixer = new THREE.AnimationMixer(oldWoman);
+        const oldWAnimations = gltf.animations;
+        const oldWActions = {
+            sit: {weight: 1}
+        };
+        oldWActions.sit.action = oldWAnimationMixer.clipAction(oldWAnimations[0]);
+        oldWActions.sit.action.play();
+        scene.add(oldWoman);
     },
     (progress) => console.log(progress),
     (error) => console.log(error)
@@ -222,7 +253,8 @@ texturesPromise.then((textures) => {
     foreground = Sprite.from(textures.foreground);
 
     fgStage.addChild(foreground);
-})
+});
+
 
 // Functions and events
 window.addEventListener('resize', () => {
@@ -249,7 +281,11 @@ window.addEventListener('keydown', (e) => {
         pressCheck.lastRepeat = clock.getElapsedTime();
     } else {
         if(e.code === 'KeyE' && dialogueReady) {
-            setStarter(personRaycaster.intersectObjects(infoZones)[0].object.name, 'place');
+            if(personRaycaster.intersectObjects(infoZones).length > 0) {
+                setStarter(personRaycaster.intersectObjects(infoZones)[0].object.name, 'place');
+            } else if(personRaycaster.intersectObjects(npcsZones).length > 0) {
+                setStarter(personRaycaster.intersectObjects(npcsZones)[0].object.name, 'npc');
+            }
             starter.style.display = 'flex';
             showDialogue = true;
         }
@@ -284,7 +320,7 @@ function tick() {
         prevPos = new THREE.Vector3(person.position.x, person.position.y, person.position.z);
 
         // Proximity check
-        if(personRaycaster.intersectObjects(infoZones).length > 0) {
+        if(personRaycaster.intersectObjects(infoZones).length > 0 || personRaycaster.intersectObjects(npcsZones).length > 0) {
             if(showDialogue && dialogueReady) {
                 pressTip.style.display = 'none';
                 dialogueReady = false;
@@ -571,6 +607,10 @@ function tick() {
     // Update animation mixer
     if(animationMixer) {
         animationMixer.update(deltaTime);
+    }
+
+    if(oldWAnimationMixer) {
+        oldWAnimationMixer.update(deltaTime);
     }
 
     if(elapsedTime >= lastSecond + 1) lastSecond = elapsedTime;
