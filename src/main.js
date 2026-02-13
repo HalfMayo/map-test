@@ -2,12 +2,9 @@ import * as THREE from "three";
 import GUI from 'lil-gui';
 import {GLTFLoader, OBB} from "three/addons";
 import {starter, otherActor, resetDialogueStep, goNextDialogue, setStarter} from "./dialogue.js";
-import {npcs} from "./npcs.js";
-import {places} from "./places.js";
-import {tagName, tagDescription, npcName, placeName, direction, pressTip} from "./variables.js";
-import {Assets, Sprite, Container, Graphics, WebGLRenderer, BitmapText} from 'pixi.js';
+import {direction, pressTip} from "./variables.js";
+import {Assets, Sprite, Container, Graphics, WebGLRenderer} from 'pixi.js';
 import '@pixi/layout';
-import {LayoutContainer} from "@pixi/layout/components";
 
 // Debug
 const gui = new GUI();
