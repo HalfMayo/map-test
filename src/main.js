@@ -216,7 +216,7 @@ const pixiRenderer = new WebGLRenderer({ alpha: true });
 await pixiRenderer.init({
     width: sizes.width,
     height: sizes.height,
-    context: canvas.getContext('webgl2'),
+    context: canvas.getContext('webgl2', {stencil:true}),
     clearBeforeRender: false,
     canvas: canvas
 });
