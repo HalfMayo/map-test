@@ -15,6 +15,7 @@
     "@pixi/layout": "^3.2.0",
     "lil-gui": "^0.20.0",
     "pixi.js": "^8.14.0",
-    "three": "^0.176.0"
+    "three": "^0.176.0",
+    "vite-plugin-top-level-await": "^1.6.0"
   }
 }
